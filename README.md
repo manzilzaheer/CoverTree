@@ -7,6 +7,9 @@ We present a distributed and parallel extension and implementation of Cover Tree
  
 Under active development
 
+### New: Python wrappers added
+Just use `python setup.py install` and then in python you can `import covertree`. The python API details are provided in `API.pdf`.
+ If you do not have root priveledges, install with `python setup.py install --user` and make sure to have the folder in path. 
 ## Organisation
 1. All codes are under `src` within respective folder
 2. Dependencies are provided under `lib` folder
@@ -16,7 +19,7 @@ Under active development
 
 
 ## Requirements
-1. gcc >= 4.8.4 or Intel&reg; C++ Compiler 2016 for using C++11 features
+1. gcc >= 5.0 or Intel&reg; C++ Compiler 2017 for using C++14 features
 
 ## How to use
 We will show how to run our Cover Tree on a single machine using synthetic dataset
@@ -68,4 +71,7 @@ The make file has some useful features:
 
 ## Performance
 Based on our evaluation the implementation is easily scalable and efficient. For example on Amazon EC2 c4.8xlarge, we could insert more than 1 million vectors of 1000 dimensions in Euclidean space with L2 norm under 250 seconds. During query time we can process > 300 queries per second per core.
+
+## Troubleshooting
+If the build fails and throws error like "instruction not found", then most probably the system does not support AVX2 instruction sets. To solve this issue, in `setup.py` and `src/cover_tree/makefile` please change `march=core-avx2`to `march=corei7`.
 

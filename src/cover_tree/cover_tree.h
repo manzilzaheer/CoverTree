@@ -1,683 +1,242 @@
-﻿# ifndef COVER_TREE_H
-# define COVER_TREE_H
+﻿# ifndef _COVER_TREE_H
+# define _COVER_TREE_H
 
 //#define DEBUG
 
-#include <vector>
-#include <stack>
-#include <Eigen/Core>
-
-#include <exception>
-
+#include <atomic>
 #include <fstream>
 #include <iostream>
+#include <stack>
+#include <map>
+#include <vector>
+#include <shared_mutex>
 
-typedef Eigen::VectorXd point;
+#include <Eigen/Core>
+typedef Eigen::VectorXd pointType;
+//typedef pointType::Scalar dtype;
 
-// Base to use for the calculations
-double base = 2.0;
-double powdict[2048];
-
-//template<class point>
 class CoverTree
 {
+/************************* Internal Functions ***********************************************/
+protected:
+    /*** Base to use for the calculations ***/
+    static constexpr double base = 1.3;
+    static double* compute_pow_table();
+    static double* powdict;
+
 public:
-	
-	// structure for each node
-	struct Node
-	{
-		point _p;						// point associated with the node
-		std::vector<Node*> children;				// list of children
-		int level;						// current level of the node
-		double maxdistUB;					// Upper bound of distance to any of descendants
-		double tempDist;
-		
-		double covdist()
-		{
-			return powdict[level + 1024]; //pow(base, level);
-		}
+    /*** structure for each node ***/
+    struct Node
+    {
+        pointType _p;                       // point associated with the node
+        std::vector<Node*> children;        // list of children
+        int level;                          // current level of the node
+        double maxdistUB;                   // upper bound of distance to any of descendants
+        unsigned ID;                        // unique ID of current node
+        Node* parent;                       // parent of current node
 
-		double sepdist()
-		{
-			return powdict[level + 1023]; // pow(base, level - 1);
-		}
+        mutable std::shared_timed_mutex mut;// lock for current node
+        
+        /*** Node modifiers ***/
+        double covdist()                    // covering distance of subtree at current node
+        {
+            return powdict[level + 1024];
+        }
+        double sepdist()                    // separating distance between nodes at current level
+        {
+            return powdict[level + 1023];
+        }
+        double dist(const pointType& pp) const  // L2 distance between current node and point pp
+        {
+            return (_p - pp).norm();
+        }
+        double dist(Node* n) const              // L2 distance between current node and node n
+        {
+            return (_p - n->_p).norm();
+        }
+        Node* setChild(const pointType& pIns, int new_id=-1)   // insert a new child of current node with point pIns
+        {
+            Node* temp = new Node;
+            temp->_p = pIns;
+            temp->level = level - 1;
+            temp->maxdistUB = 0; // powdict[level + 1024];
+            temp->ID = new_id;
+            temp->parent = this;
+            children.push_back(temp);
+            return temp;
+        }
+        Node* setChild(Node* pIns)          // insert the subtree pIns as child of current node
+        {
+            if( pIns->level != level - 1)
+            {
+                Node* current = pIns;
+                std::stack<Node*> travel;
+                current->level = level-1;
+                //current->maxdistUB = powdict[level + 1024];
+                travel.push(current);
+                while (travel.size() > 0)
+                {
+                    current = travel.top();
+                    travel.pop();
 
-		void setChild(const point& pIns)
-		{
-			Node* temp = new Node;
-			temp->_p = pIns;
-			temp->level = level - 1;
-			temp->maxdistUB = 0;
-			//maxdistUB = std::max(maxdistUB, tempDist);
-			children.push_back(temp);
-		}
+                    for (const auto& child : *current)
+                    {
+                        child->level = current->level-1;
+                        //child->maxdistUB = powdict[child->level + 1025];
+                        travel.push(child);
+                    }
 
-		void setChild(Node* pIns)
-		{
-			if( pIns->level != level - 1)
-			{
-				Node* current = pIns;
-				std::stack<Node*> travel;
-				current->level = level-1;
-				travel.push(current);
-				while (travel.size() > 0)
-				{
-					current = travel.top();
-					travel.pop();
+                }
+            }
+            pIns->parent = this;
+            children.push_back(pIns);
+            return pIns;
+        }
 
-					for (const auto& child : *current)
-					{
-						child->level = current->level-1;
-						travel.push(child);
-					}
+        /*** erase child ***/
+        void erase(size_t pos)
+        {
+            children[pos] = children.back();
+            children.pop_back();
+        }
 
-				}
-			}
-			children.push_back(pIns);
-		}
-		
-		double dist(const point& pp) const
-		{
-			return (_p - pp).norm();
-		}
+        void erase(std::vector<Node*>::iterator pos)
+        {
+            *pos = children.back();
+            children.pop_back();
+        }
 
-		double dist(Node* n) const
-		{
-			return (_p - n->_p).norm();
-		}
+        /*** Iterator access ***/
+        inline std::vector<Node*>::iterator begin()
+        {
+            return children.begin();
+        }
+        inline std::vector<Node*>::iterator end()
+        {
+            return children.end();
+        }
+        inline std::vector<Node*>::const_iterator begin() const
+        {
+            return children.begin();
+        }
+        inline std::vector<Node*>::const_iterator end() const
+        {
+            return children.end();
+        }
 
-		/*** Iterator access ***/
-		inline std::vector<Node*>::iterator begin()
-		{
-			return children.begin();
-		}
-
-		inline std::vector<Node*>::iterator end()
-		{
-			return children.end();
-		}
-
-		inline std::vector<Node*>::const_iterator begin() const
-		{
-			return children.begin();
-		}
-
-		inline std::vector<Node*>::const_iterator end() const
-		{
-			return children.end();
-		}
-
-		friend std::ostream& operator<<(std::ostream& os, const Node& ct)
-		{
-			Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", "[", "]");
-			os << "(" << ct._p.format(CommaInitFmt) << ":" << ct.level << ":" << ct.maxdistUB << ")";
-			return os;
-		}
-	};
+        /*** Pretty print ***/
+        friend std::ostream& operator<<(std::ostream& os, const Node& ct)
+        {
+            Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", "[", "]");
+            os << "(" << ct._p.format(CommaInitFmt) << ":" << ct.level << ":" << ct.maxdistUB <<  ":" << ct.ID << ")";
+            return os;
+        }
+    };
+    // mutable std::map<int,std::atomic<unsigned>> dist_count;
+    std::map<int,unsigned> level_count;
 
 protected:
+    Node* root;                         // Root of the tree
+    std::atomic<int> min_scale;         // Minimum scale
+    std::atomic<int> max_scale;         // Minimum scale
+    //int min_scale;                    // Minimum scale
+    //int max_scale;                    // Minimum scale
+    int truncate_level;                 // Relative level below which the tree is truncated
+    bool id_valid;
 
-	Node* root;			// Root of the tree
-	int minScale;			// Minimum scale
-	int maxScale;			// Minimum scale
-
-	void insert(Node* current, const point& p)
-	{
-		#ifdef DEBUG
-			if( current->dist(p) > current->covdist() )
-				throw std::runtime_error("Internal insert got wrong input!");
-		#endif
-		
-		bool flag = true;
-		for (const auto& child : *current)
-		{
-			child->tempDist = child->dist(p);
-			if ( child->tempDist <= child->covdist() )
-			{
-				insert(child, p);
-				flag = false;
-				break;
-			}
-		}
-
-		if (flag)
-		{
-			current->setChild(p);
-			if(minScale > current->level-1)
-			{
-				minScale = current->level-1;
-				//std::cout<< minScale << " " << maxScale << std::endl;
-			}
-		}
-	}
-
-	void insert(Node* current, Node* p)
-	{
-		#ifdef DEBUG
-			if( current->dist(p) > current->covdist() )
-				throw std::runtime_error("Internal insert got wrong input!");
-		#endif
-		
-		bool flag = true;
-		for (const auto& child : *current)
-		{
-			child->tempDist = child->dist(p);
-			if ( child->tempDist <= child->covdist() )
-			{
-				insert(child, p);
-				flag = false;
-				break;
-			}
-		}
-
-		if (flag)
-		{
-			current->setChild(p);
-			if(minScale > current->level-1)
-			{
-				minScale = current->level-1;
-				//std::cout<< minScale << " " << maxScale << std::endl;
-			}
-		}
-	}
-
-	Node* NearestNeighbour(Node* current, const point &p, Node* nn) const
-	{	
-		if (current->tempDist < nn->tempDist)
-			nn = current;
-
-		for (const auto& child : *current)
-			child->tempDist = child->dist(p);
-		auto comp_x = [](Node* a, Node* b) { return a->tempDist < b->tempDist; };
-		std::sort(current->begin(), current->end(), comp_x);
-
-		for (const auto& child : *current)
-		{
-			if ( nn->tempDist > child->tempDist - child->maxdistUB )
-				nn = NearestNeighbour(child, p, nn);
-		}
-		return nn;
-	}
+    std::atomic<unsigned> N;            // Number of points in the cover tree
+    //unsigned N;                       // Number of points in the cover tree
+    unsigned D;                         // Dimension of the points
 	
-	Node* NearestNeighbourMulti(Node* current, const point &p, Node* nn) const
-	{
-		double tempDist = nn->dist(p);
-		if (current->dist(p) < tempDist)
-			nn = current;
-	
-		for (const auto& child : *current)
-		{
-			if (tempDist > child->dist(p) - child->maxdistUB)
-				nn = NearestNeighbourMulti(child, p, nn);
-		}
-		return nn;
-	}
+	std::shared_timed_mutex global_mut;	// lock for changing the root
 
-	void nearNeighbors(Node* current, const point& p, std::vector<Node*>& nnList) const
-	{	
-        // If the current node is eligible to get into the list
-        // TODO: An efficient implementation ?
-		auto comp_x = [](Node* a, Node* b) { return a->tempDist < b->tempDist; };
-        	
-		double curDist = current->tempDist;
-		double bestNow = nnList.back()->tempDist;
-		
-		if(curDist < bestNow)
-		{
-			nnList.insert( 
-           			std::upper_bound( nnList.begin(), nnList.end(), current, comp_x ),
-           			current 
-        		);
-			nnList.pop_back();
-		}
+    /*** Insert point or node at current node ***/
+    bool insert(Node* current, const pointType& p);
+    bool insert(Node* current, Node* p);
 
-		for (const auto& child : *current)
-			child->tempDist = child->dist(p);
-		std::sort(current->begin(), current->end(), comp_x);
+    /*** Nearest Neighbour search ***/
+    void NearestNeighbour(Node* current, double dist_current, const pointType &p, std::pair<CoverTree::Node*, double>& nn) const;
 
-		for (const auto& child : *current)
-		{
-			if ( nnList.back()->tempDist > child->tempDist - child->maxdistUB )
-				nearNeighbors(child, p, nnList);
-		}
-	}
-	
-	void nearNeighborsMulti(Node* current, const point& p, std::vector<Node*>& nnList) const
-	{	
-        // If the current node is eligible to get into the list
-        // TODO: An efficient implementation ?
-                double curDist = current->dist(p);
-		double bestNow = nnList.back()->dist(p);
-		
-		if(curDist < bestNow)
-		{
-			auto k = nnList.begin();
-			for( ; curDist > (*k)->dist(p); ++k);
-			nnList.insert(k, current);
-			nnList.pop_back();
-		}
+    /*** k-Nearest Neighbour search ***/
+    void kNearestNeighbours(Node* current, double dist_current, const pointType& p, std::vector<std::pair<CoverTree::Node*, double>>& nnList) const;
 
-		for (const auto& child : *current)
-		{
-			if ( bestNow > child->dist(p) - child->maxdistUB )
-				nearNeighborsMulti(child, p, nnList);
-		}
-	}
-	
-	
-	void rangeNeighbors(Node* current, const point &p, double range, std::vector<Node*>& nnList) const
-	{	
-        // If the current node is eligible to get into the list
-		if (current->tempDist < range)
-            nnList.push_back(current);
+    /*** Range search ***/
+    void rangeNeighbours(Node* current, double dist_current, const pointType &p, double range, std::vector<std::pair<CoverTree::Node*, double>>& nnList) const;
 
-        // Sort the children
-		for (const auto& child : *current)
-			child->tempDist = child->dist(p);
-		auto comp_x = [](Node* a, Node* b) { return a->tempDist < b->tempDist; };
-		std::sort(current->begin(), current->end(), comp_x);
+    /*** Serialize/Desrialize helper function ***/
+    char* preorder_pack(char* buff, Node* current) const;       // Pre-order traversal
+    char* postorder_pack(char* buff, Node* current) const;      // Post-order traversal
+    void PrePost(Node*& current, char*& pre, char*& post);
 
-		for (const auto& child : *current){
-			if (range > child->tempDist - child->maxdistUB)	
-				rangeNeighbors(child, p, range, nnList);
-		}
-	}
-	
-	void rangeNeighborsMulti(Node* current, const point &p, double range, std::vector<Node*>& nnList) const
-	{	
-		// If the current node is eligible to get into the list
-		if (current->dist(p) < range)
-	        nnList.push_back(current);
-
-		for (const auto& child : *current){
-			if (range > child->dist(p) - child->maxdistUB)
-				rangeNeighborsMulti(child, p, range, nnList);
-		}
-	}
-
-	std::vector<Node*> mergeHelper(Node* p, Node* q)
-	{
-		#ifdef DEBUG
-			assert(root->level == ct->root->level);
-			assert(root->dist(ct->root) < root->covdist());
-		#endif
-		
-		std::vector<Node*> sepcov, uncovered, leftovers;
-		for (const auto& r : *q)
-		{
-			if (p->dist(r) < p->covdist())
-			{
-				bool flag = true;
-				for (const auto& s : *p)
-				{
-					if (s->dist(r) <= s->covdist())
-					{
-						std::vector<Node*> leftoverss = mergeHelper(s, r);
-						leftovers.insert(leftovers.end(), leftoverss.begin(), leftoverss.end());
-						flag = false;
-						break;
-					}
-				}
-
-				if (flag)
-				{
-					sepcov.push_back(r);
-				}
-			}
-			else
-			{
-				uncovered.push_back(r);
-			}
-		}
-
-		//children ← children ∪ sepcov
-		for (const auto& s : sepcov)
-			p->children.push_back(s);
-
-		insert(p, q->_p);
-		delete q;
-
-		for (const auto& r : leftovers)
-		{
-			if (p->dist(r) <= p->covdist())
-				insert(p, r);
-			else
-				uncovered.push_back(r);
-		}
-
-		return uncovered;
-	}
-
-	static void clear(Node* current)
-	{
-		std::stack<Node*> travel;
-
-		travel.push(current);
-		while (travel.size() > 0)
-		{
-			current = travel.top();
-			travel.pop();
-
-			for (const auto& child : *current)
-				travel.push(child);
-
-			delete current;
-		}
-	}
-
+    /*** debug functions ***/
+    unsigned msg_size() const;
+    void calc_maxdist();                            //find true maxdist
+    void generate_id(Node* current);                //Generate IDs for each node from root as 0
+    
 public:
-	
-	// Inserting a point
-	void insert(const point& p)
-	{
-		if ( root->dist(p) > root->covdist() )
-		{
-			while (root->dist(p) > 2 * root->covdist())
-			{
-				Node* current = root;
-				Node* parent = NULL;
-				while (current->children.size()>0)
-				{
-					parent = current;
-					current = current->children.back();
-				}
-				if (parent != NULL)
-				{
-					parent->children.pop_back();
-					current->level = root->level + 1;
-					current->children.push_back(root);
-					root = current;
-				}
-				else
-				{
-					root->level += 1;
-				}
-			}
-			Node* temp = new Node;
-			temp->_p = p;
-			temp->level = root->level + 1;
-			temp->children.push_back(root);
-			root = temp;
-			maxScale = root->level;
-			//std::cout << "Upward: " <<  minScale << " " << maxScale << std::endl;
-		}
-		else
-		{
-			root->tempDist = root->dist(p);
-			insert(root, p);
-		}
-		return;
-	}
+    /*** Internal Contructors ***/
+    /*** Constructor: needs atleast 1 point to make a valid covertree ***/
+    // NULL tree
+    CoverTree(int truncate = -1);   
+    // cover tree with one point as root
+    CoverTree(const pointType& p, int truncate = -1);
+    // cover tree using points in the list between begin and end
+    CoverTree(std::vector<pointType>& pList, int begin, int end, int truncate = -1);
+    // cover tree using points in the list between begin and end
+    CoverTree(Eigen::MatrixXd& pMatrix, int begin, int end, int truncate = -1);
+    // cover tree using points in the list between begin and end
+    CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, int truncate = -1);
 
-	// First the number of nearest neighbor
-	point& NearestNeighbour(const point &p) const
-	{
-		root->tempDist = root->dist(p);
-		return NearestNeighbour(root, p, root)->_p;
-	}
-	
-	point& NearestNeighbourMulti(const point &p) const
-	{
-		return NearestNeighbourMulti(root, p, root)->_p;
-	}
-	
-	// Function to obtain the numNbrs nearest neighbors
-	std::vector<point> nearNeighbors(const point queryPt, int numNbrs) const
-	{
-		root->tempDist = root->dist(queryPt);
+    /*** Destructor ***/
+    /*** Destructor: deallocating all memories by a post order traversal ***/
+    ~CoverTree();
 
-        // Do the worst initialization
-        Node* dummyNode = new Node();
-        dummyNode->tempDist = std::numeric_limits<double>::max();
-        // List of k-nearest points till now
-        std::vector<Node*> nnListn(numNbrs, dummyNode);
-	nearNeighbors(root, queryPt, nnListn);
-		
-	std::vector<point> nnList;
-	for( const auto& node : nnListn )
-		nnList.push_back(node->_p);
-	return nnList;
-	}
-	std::vector<point> nearNeighborsMulti(const point queryPt, int numNbrs) const
-	{
-        // Do the worst initialization
-        Node* dummyNode = new Node();
-	dummyNode->_p = 1e100*root->_p;
-        dummyNode->tempDist = std::numeric_limits<double>::max();
-        // List of k-nearest points till now
-        std::vector<Node*> nnListn(numNbrs, dummyNode);
-		nearNeighborsMulti(root, queryPt, nnListn);
-		
-		std::vector<point> nnList;
-		for( const auto& node : nnListn )
-			nnList.push_back(node->_p);
-		return nnList;
-	}
+/************************* Public API ***********************************************/
+public:
+    /*** construct cover tree using all points in the list ***/
+    static CoverTree* from_points(std::vector<pointType>& pList, int truncate = -1, bool use_multi_core = true);
 
-    // Function to get the neighbors around the range
-	std::vector<point> rangeNeighbors(const point queryPt, double range) const
-    {
-        root->tempDist = root->dist(queryPt);
-        // List of nearest neighbors in the range
-        std::vector<Node*> nnListn;
-		rangeNeighbors(root, queryPt, range, nnListn);
+    /*** construct cover tree using all points in the matrix in row-major form ***/
+    static CoverTree* from_matrix(Eigen::MatrixXd& pMatrix, int truncate = -1, bool use_multi_core = true);
+    
+    /*** construct cover tree using all points in the matrix in row-major form ***/
+    static CoverTree* from_matrix(Eigen::Map<Eigen::MatrixXd>& pMatrix, int truncate = -1, bool use_multi_core = true);
 
-		std::vector<point> nnList;
-		for( const auto& node : nnListn )
-			nnList.push_back(node->_p);
-        return nnList;
-    }
-	
-	// Function to get the neighbors around the range
-	std::vector<point> rangeNeighborsMulti(const point queryPt, double range) const
-    {
-        // List of nearest neighbors in the range
-        std::vector<Node*> nnListn;;
-		rangeNeighborsMulti(root, queryPt, range, nnListn);
+    
+    /*** Insert point p into the cover tree ***/
+    bool insert(const pointType& p);
 
-		std::vector<point> nnList;
-		for( const auto& node : nnListn )
-			nnList.push_back(node->_p);
-        return nnList;
-    }
+    /*** Remove point p into the cover tree ***/
+    bool remove(const pointType& p);
 
-	void Merge(CoverTree* ct)
-	{
-		#ifdef DEBUG
-			assert(root->level >= ct->root->level);
-		#endif
+    /*** Nearest Neighbour search ***/
+    std::pair<CoverTree::Node*, double> NearestNeighbour(const pointType &p) const;
+    
+    /*** k-Nearest Neighbour search ***/
+    std::vector<std::pair<CoverTree::Node*, double>> kNearestNeighbours(const pointType &p, unsigned k = 10) const;
+    
+    /*** Range search ***/
+    std::vector<std::pair<CoverTree::Node*, double>> rangeNeighbours(const pointType &queryPt, double range = 1.0) const;
 
-		//Make sure d(p,q) < covdist(p)
-		while (root->dist(ct->root) > root->covdist())
-		{
-			//std::cout << "Inside while 1" << std::endl;
-			Node* current = root;
-			Node* parent = NULL;
-			while (current->children.size()>0)
-			{
-				parent = current;
-				current = current->children.back();
-			}
-			if (parent != NULL)
-			{
-				parent->children.pop_back();
-				current->level = root->level + 1;
-				current->children.push_back(root);
-				root = current;
-			}
-			else
-			{
-				root->level += 1;
-			}
-		}
+    /*** Serialize/Desrialize: useful for MPI ***/
+    char* serialize() const;                                    // Serialize to a buffer
+    void deserialize(char* buff);                               // Deserialize from a buffer
+    
+    /*** Unit Tests ***/
+    bool check_covering() const;
 
-		// Make sure level(p) == level(q)
-		while (root->level > ct->root->level)
-		{
-			//std::cout << "Inside while 2" << std::endl;
-			Node* current = ct->root;
-			Node* parent = NULL;
-			while (current->children.size()>0)
-			{
-				parent = current;
-				current = current->children.back();
-			}
-			if (parent != NULL)
-			{
-				parent->children.pop_back();
-				current->level = ct->root->level + 1;
-				current->children.push_back(ct->root);
-				ct->root = current;
-			}
-			else
-			{
-				ct->root->level += 1;
-			}
-		}
+    /*** Return the level of root in the cover tree (== max_level) ***/
+    int get_level();
+    void print_levels();
 
-		std::vector<Node*> leftovers = mergeHelper(root, ct->root);
-		for (const auto& p : leftovers)
-			insert(root, p);
+    /*** Return all points in the tree ***/
+    std::vector<pointType> get_points();
 
-		return;
-	}
+    /*** Count the points in the tree ***/
+    unsigned count_points();
 
-	//contructor: needs atleast 1 point to make a valid covertree
-	CoverTree(const point& p)
-	{
-		minScale=1000;
-		maxScale=0;
-		
-		root = new Node;
-		root->_p = p;
-		root->level = 0;
-		root->maxdistUB = 0;
-	}
-
-	//contructor: needs atleast 1 point to make a valid covertree
-	CoverTree(std::vector<point>& pList)
-	{
-		point temp = pList.back();
-		pList.pop_back();
-		
-		minScale=1000;
-		maxScale=0;
-
-		root = new Node;
-		root->_p = temp;
-		root->level = 0;
-		root->maxdistUB = 0;
-
-		int i = 0;
-		for (const auto& p : pList)
-			insert(p);
-
-		pList.push_back(temp);
-	}
-
-	//contructor: needs atleast 1 point to make a valid covertree
-	CoverTree(std::vector<point>& pList, int begin, int end)
-	{
-		point temp = pList[begin];
-
-		minScale = 1000;
-		maxScale = 0;
-
-		root = new Node;
-		root->_p = temp;
-		root->level = 0;
-		root->maxdistUB = 0;
-
-		for (int i = begin + 1; i < end; ++i)
-			insert(pList[i]);
-	}
-
-	//destructor: deallocating all memories by a post order traversal
-	~CoverTree()
-	{
-		clear(root);
-	}
-
-	//get root level == max_level
-	int get_level()
-	{
-		return root->level;
-	}
-
-	// Debug function
-	friend std::ostream& operator<<(std::ostream& os, const CoverTree& ct)
-	{
-		Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", "[", "]");
-
-		std::stack<Node*> travel;
-		Node* curNode;
-
-		// Initialize with root
-		travel.push(ct.root);
-
-		// Qualititively keep track of number of prints
-		int numPrints = 0;
-		// Pop, print and then push the children
-		while (travel.size() > 0)
-		{
-			if (numPrints > 5000)
-				throw std::runtime_error("Printing stopped prematurely, something wrong!");
-			numPrints++;
-
-			// Pop
-			curNode = travel.top();
-			travel.pop();
-
-			// Print the current -> children pair
-			// os << *curNode << std::endl;
-			for (const auto& child : *curNode)
-				os << *curNode << " -> " << *child << std::endl;
-
-			// Now push the children
-			for(int i = curNode->children.size()-1; i>=0; --i)
-				travel.push(curNode->children[i]);
-		}
-
-		return os;
-	}
-
-	//find true maxdist
-	void calc_maxdist()
-	{	
-		std::vector<Node*> travel;
-		std::vector<Node*> active;
-		
-		Node* current = root;
-	
-		root->maxdistUB = 0;	
-		travel.push_back(root);
-		while( travel.size() > 0 )
-		{
-			current = travel.back();
-		
-			if(current->maxdistUB == 0){
-			while(current->children.size()>0)
-			{
-				active.push_back(current);
-				// push the children
-				for(int i = current->children.size()-1; i>=0; --i)
-				{
-					current->children[i]->maxdistUB = 0;
-					travel.push_back(current->children[i]);
-				}
-				current = current->children[0];
-			}}
-			else
-				active.pop_back();
-			
-			// find distance with current node
-			for (const auto& n : active)
-				n->maxdistUB = std::max( n->maxdistUB, n->dist(current) );
-
-			// Pop
-			travel.pop_back();
-		}
-	}
+    /*** Pretty print ***/
+    friend std::ostream& operator<<(std::ostream& os, const CoverTree& ct);
 };
 
-#endif
+#endif //_COVER_TREE_H
