@@ -452,7 +452,7 @@ void CoverTree::calc_maxdist()
 
     root->maxdistUB = 0.0;
     travel.push_back(root);
-    while (travel.size() > 0)
+    while (!travel.empty())
     {
         current = travel.back();
         if (current->maxdistUB <= 0) {
@@ -638,7 +638,7 @@ bool CoverTree::check_covering() const
     travel.push(root);
 
     // Pop, check and then push the children
-    while (travel.size() > 0)
+    while (!travel.empty())
     {
         // Pop
         curNode = travel.top();
@@ -660,14 +660,15 @@ bool CoverTree::check_covering() const
 /****************************** Internal Constructors of Cover Trees *************************************/
 
 //constructor: NULL tree
-CoverTree::CoverTree(int truncate /*=-1*/ )
+CoverTree::CoverTree(const int truncate /*=-1*/ )
+    : id_valid(false)
+    , root(NULL)
+    , min_scale(1000)
+    , max_scale(0)
+    , truncate_level(truncate)
+    , N(0)
+    , D(0)
 {
-    root = NULL;
-    min_scale = 1000;
-    max_scale = 0;
-    truncate_level = truncate;
-    N = 0;
-    D = 0;
 }
 
 //constructor: needs atleast 1 point to make a valid covertree
@@ -882,7 +883,7 @@ CoverTree::~CoverTree()
 
     if (root != NULL)
         travel.push(root);
-    while (travel.size() > 0)
+    while (!travel.empty())
     {
         CoverTree::Node* current = travel.top();
         travel.pop();
@@ -906,6 +907,7 @@ CoverTree* CoverTree::from_points(std::vector<pointType>& pList, int truncate /*
     CoverTree* cTree = NULL;
     if (use_multi_core)
     {
+	// FIXME Same as in 'else' part; makes no sense
         cTree = new CoverTree(pList, 0, pList.size(), truncate);
     }
     else
@@ -925,6 +927,7 @@ CoverTree* CoverTree::from_matrix(Eigen::MatrixXd& pMatrix, int truncate /*=-1*/
     CoverTree* cTree = NULL;
     if (use_multi_core)
     {
+	// FIXME Same as in 'else' part; makes no sense
         cTree = new CoverTree(pMatrix, 0, pMatrix.cols(), truncate);
     }
     else
@@ -945,6 +948,7 @@ CoverTree* CoverTree::from_matrix(Eigen::Map<Eigen::MatrixXd>& pMatrix, int trun
     CoverTree* cTree = NULL;
     if (use_multi_core)
     {
+	// FIXME Same as in 'else' part; makes no sense
         cTree = new CoverTree(pMatrix, 0, pMatrix.cols(), truncate);
     }
     else
@@ -975,7 +979,7 @@ void CoverTree::print_levels()
     travel.push(root);
 
     // Pop, print and then push the children
-    while (travel.size() > 0)
+    while (!travel.empty())
     {
         // Pop
         curNode = travel.top();
@@ -1008,7 +1012,7 @@ std::ostream& operator<<(std::ostream& os, const CoverTree& ct)
     // Qualititively keep track of number of prints
     int numPrints = 0;
     // Pop, print and then push the children
-    while (travel.size() > 0)
+    while (!travel.empty())
     {
         if (numPrints > 5000)
             throw std::runtime_error("Printing stopped prematurely, something wrong!");
@@ -1043,7 +1047,7 @@ std::vector<pointType> CoverTree::get_points()
 
     N = 0;
     // Pop, print and then push the children
-    while (travel.size() > 0)
+    while (!travel.empty())
     {
         // Pop
         current = travel.top();
@@ -1074,7 +1078,7 @@ unsigned CoverTree::count_points()
 
     unsigned result = 0;
     // Pop, print and then push the children
-    while (travel.size() > 0)
+    while (!travel.empty())
     {
         // Pop
         current = travel.top();

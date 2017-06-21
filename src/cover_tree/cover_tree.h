@@ -80,7 +80,7 @@ public:
                 current->level = level-1;
                 //current->maxdistUB = powdict[level + 1024];
                 travel.push(current);
-                while (travel.size() > 0)
+                while (!travel.empty())
                 {
                     current = travel.top();
                     travel.pop();
