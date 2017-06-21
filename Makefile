@@ -1,6 +1,6 @@
 CURR_DIR = $(shell pwd)
 SOURCES = $(wildcard $(CURR_DIR)/src/*)
-BUILDDIR = $(subst /src/,/build/,$(SOURCES))
+BUILDDIR = $(subst $(CURR_DIR)/src/,$(CURR_DIR)/build/,$(SOURCES))
 PROGS = $(subst $(CURR_DIR)/src/,,$(SOURCES))
 CLEAN_PROGS = $(subst $(CURR_DIR)/src/,clean-,$(SOURCES))
 
