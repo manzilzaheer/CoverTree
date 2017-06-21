@@ -42,7 +42,7 @@ public:
         Node* parent;                       // parent of current node
 
         mutable std::SHARED_MUTEX_TYPE mut;// lock for current node
-        
+
         /*** Node modifiers ***/
         double covdist()                    // covering distance of subtree at current node
         {
@@ -153,7 +153,7 @@ protected:
     std::atomic<unsigned> N;            // Number of points in the cover tree
     //unsigned N;                       // Number of points in the cover tree
     unsigned D;                         // Dimension of the points
-	
+
 	std::SHARED_MUTEX_TYPE global_mut;	// lock for changing the root
 
     /*** Insert point or node at current node ***/
@@ -178,12 +178,12 @@ protected:
     unsigned msg_size() const;
     void calc_maxdist();                            //find true maxdist
     void generate_id(Node* current);                //Generate IDs for each node from root as 0
-    
+
 public:
     /*** Internal Contructors ***/
     /*** Constructor: needs atleast 1 point to make a valid covertree ***/
     // NULL tree
-    CoverTree(int truncate = -1);   
+    CoverTree(int truncate = -1);
     // cover tree with one point as root
     CoverTree(const pointType& p, int truncate = -1);
     // cover tree using points in the list between begin and end
@@ -204,11 +204,11 @@ public:
 
     /*** construct cover tree using all points in the matrix in row-major form ***/
     static CoverTree* from_matrix(Eigen::MatrixXd& pMatrix, int truncate = -1, bool use_multi_core = true);
-    
+
     /*** construct cover tree using all points in the matrix in row-major form ***/
     static CoverTree* from_matrix(Eigen::Map<Eigen::MatrixXd>& pMatrix, int truncate = -1, bool use_multi_core = true);
 
-    
+
     /*** Insert point p into the cover tree ***/
     bool insert(const pointType& p);
 
@@ -217,17 +217,17 @@ public:
 
     /*** Nearest Neighbour search ***/
     std::pair<CoverTree::Node*, double> NearestNeighbour(const pointType &p) const;
-    
+
     /*** k-Nearest Neighbour search ***/
     std::vector<std::pair<CoverTree::Node*, double>> kNearestNeighbours(const pointType &p, unsigned k = 10) const;
-    
+
     /*** Range search ***/
     std::vector<std::pair<CoverTree::Node*, double>> rangeNeighbours(const pointType &queryPt, double range = 1.0) const;
 
     /*** Serialize/Desrialize: useful for MPI ***/
     char* serialize() const;                                    // Serialize to a buffer
     void deserialize(char* buff);                               // Deserialize from a buffer
-    
+
     /*** Unit Tests ***/
     bool check_covering() const;
 
@@ -246,3 +246,4 @@ public:
 };
 
 #endif //_COVER_TREE_H
+

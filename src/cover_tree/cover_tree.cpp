@@ -29,7 +29,7 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
 #endif
     if (truncate_level > 0 && current->level < max_scale-truncate_level)
         return false;
-    
+
     //acquire read lock
     current->mut.lock_shared();
 
@@ -80,7 +80,7 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
             current->setChild(p, new_id);
 			result = true;
             current->mut.unlock();
-            
+
             int local_min = min_scale.load();
             while( local_min > current->level - 1){
                 min_scale.compare_exchange_weak(local_min, current->level - 1, std::memory_order_relaxed, std::memory_order_relaxed);
@@ -117,7 +117,7 @@ bool CoverTree::insert(CoverTree::Node* current, CoverTree::Node* p)
 #endif
     if (truncate_level > 0 && current->level < max_scale-truncate_level)
         return false;
-    
+
     //acquire read lock
     current->mut.lock_shared();
 
@@ -165,7 +165,7 @@ bool CoverTree::insert(CoverTree::Node* current, CoverTree::Node* p)
             current->setChild(p);
 			result = true;
             current->mut.unlock();
-            
+
             int local_min = min_scale.load();
             while( local_min > current->level - 1){
                 min_scale.compare_exchange_weak(local_min, current->level - 1, std::memory_order_relaxed, std::memory_order_relaxed);
@@ -282,7 +282,7 @@ bool CoverTree::remove(const pointType &p)
             {
                 CoverTree::insert(root, q);
             }
-            
+
             //3. delete
             delete node_p;
 
@@ -303,7 +303,7 @@ void CoverTree::NearestNeighbour(CoverTree::Node* current, double dist_current, 
         nn.first = current;
         nn.second = dist_current;
     }
-    
+
     // Sort the children
     unsigned num_children = current->children.size();
     std::vector<int> idx(num_children);
@@ -337,17 +337,17 @@ std::pair<CoverTree::Node*, double> CoverTree::NearestNeighbour(const pointType 
 /****************************** k-Nearest Neighbours *************************************/
 
 void CoverTree::kNearestNeighbours(CoverTree::Node* current, double dist_current, const pointType& p, std::vector<std::pair<CoverTree::Node*, double>>& nnList) const
-{   
+{
     // TODO(manzilz): An efficient implementation ?
-    
+
     // If the current node is eligible to get into the list
     if(dist_current < nnList.back().second)
     {
         auto comp_x = [](std::pair<CoverTree::Node*, double> a, std::pair<CoverTree::Node*, double> b) { return a.second < b.second; };
         std::pair<CoverTree::Node*, double> temp(current, dist_current);
-        nnList.insert( 
+        nnList.insert(
             std::upper_bound( nnList.begin(), nnList.end(), temp, comp_x ),
-            temp 
+            temp
         );
         nnList.pop_back();
     }
@@ -370,7 +370,7 @@ void CoverTree::kNearestNeighbours(CoverTree::Node* current, double dist_current
             kNearestNeighbours(child, dist_child, p, nnList);
     }
 }
-    
+
 std::vector<std::pair<CoverTree::Node*, double>> CoverTree::kNearestNeighbours(const pointType &queryPt, unsigned numNbrs) const
 {
     // Do the worst initialization
@@ -381,14 +381,14 @@ std::vector<std::pair<CoverTree::Node*, double>> CoverTree::kNearestNeighbours(c
     // Call with root
     double dist_root = root->dist(queryPt);
     kNearestNeighbours(root, dist_root, queryPt, nnList);
-    
+
     return nnList;
 }
-    
+
 /****************************** Range Neighbours Search *************************************/
 
 void CoverTree::rangeNeighbours(CoverTree::Node* current, double dist_current, const pointType &p, double range, std::vector<std::pair<CoverTree::Node*, double>>& nnList) const
-{   
+{
     // If the current node is eligible to get into the list
     if (dist_current < range)
     {
@@ -690,21 +690,21 @@ CoverTree::CoverTree(std::vector<pointType>& pList, int begin, int end, int trun
 {
     //1. Compute the mean of entire data
     pointType mx = utils::ParallelAddList(pList).get_result()/pList.size();
-    
+
     //2. Compute distance of every point from the mean || Variance
     pointType dists = utils::ParallelDistanceComputeList(pList, mx).get_result();
-    
+
     //3. argort the distance to find approximate mediod
     std::vector<int> idx(end-begin);
     std::iota(std::begin(idx), std::end(idx), 0);
     auto comp_x = [&dists](int a, int b) { return dists[a] > dists[b]; };
     std::sort(std::begin(idx), std::end(idx), comp_x);
     std::cout<<"Max distance: " << dists[idx[0]] << std::endl;
-    
+
     //4. Compute distance of every point from the mediod
     mx = pList[idx[0]];
     dists = utils::ParallelDistanceComputeList(pList, mx).get_result();
-    
+
     int scale_val = std::ceil(std::log(dists.maxCoeff())/std::log(base));
     std::cout<<"Scale chosen: " << scale_val << std::endl;
     pointType temp = pList[idx[0]];
@@ -713,12 +713,12 @@ CoverTree::CoverTree(std::vector<pointType>& pList, int begin, int end, int trun
     truncate_level = truncateArg;
     N = 1;
     D = temp.rows();
-    
+
     root = new CoverTree::Node;
     root->_p = temp;
     root->level = scale_val; //-1000;
     root->maxdistUB = powdict[scale_val+1024];
-    
+
     int run_till = 50000<end ? 50000 : end;
     for (int i = 1; i < run_till; ++i){
         utils::progressbar(i, run_till);
@@ -729,7 +729,7 @@ CoverTree::CoverTree(std::vector<pointType>& pList, int begin, int end, int trun
     std::cout<<std::endl;
 
     std::cout << pList[0].rows() << ", " << pList.size() << std::endl;
-    
+
     utils::parallel_for_progressbar(50000,end,[&](int i)->void{
     //for (int i = 50000; i < end; ++i){
         //utils::progressbar(i, end-50000);
@@ -743,21 +743,21 @@ CoverTree::CoverTree(Eigen::MatrixXd& pMatrix, int begin, int end, int truncateA
 {
     //1. Compute the mean of entire data
     pointType mx = utils::ParallelAddMatrix(pMatrix).get_result()/pMatrix.cols();
-    
+
     //2. Compute distance of every point from the mean || Variance
     pointType dists = utils::ParallelDistanceCompute(pMatrix, mx).get_result();
-    
+
     //3. argort the distance to find approximate mediod
     std::vector<int> idx(end-begin);
     std::iota(std::begin(idx), std::end(idx), 0);
     auto comp_x = [&dists](int a, int b) { return dists[a] > dists[b]; };
     std::sort(std::begin(idx), std::end(idx), comp_x);
     std::cout<<"Max distance: " << dists[idx[0]] << std::endl;
-    
+
     //4. Compute distance of every point from the mediod
     mx = pMatrix.col(idx[0]);
     dists = utils::ParallelDistanceCompute(pMatrix, mx).get_result();
-    
+
     int scale_val = std::ceil(std::log(dists.maxCoeff())/std::log(base));
     std::cout<<"Scale chosen: " << scale_val << std::endl;
     pointType temp = pMatrix.col(idx[0]);
@@ -771,7 +771,7 @@ CoverTree::CoverTree(Eigen::MatrixXd& pMatrix, int begin, int end, int truncateA
     root->_p = temp;
     root->level = scale_val; //-1000;
     root->maxdistUB = powdict[scale_val+1024];
-    
+
     int run_till = 50000<end ? 50000 : end;
     for (int i = 1; i < run_till; ++i){
         utils::progressbar(i, run_till);
@@ -782,13 +782,13 @@ CoverTree::CoverTree(Eigen::MatrixXd& pMatrix, int begin, int end, int truncateA
     std::cout<<std::endl;
 
     std::cout << pMatrix.rows() << ", " << pMatrix.cols() << std::endl;
-    
+
     utils::parallel_for_progressbar(50000,end,[&](int i)->void{
     //for (int i = 50000; i < end; ++i){
         //utils::progressbar(i, end-50000);
         if(!insert(pMatrix.col(idx[i])))
             std::cout << "Insert failed!!!" << std::endl;
-    });    
+    });
 }
 
 //constructor: cover tree using points in the list between begin and end
@@ -796,21 +796,21 @@ CoverTree::CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, i
 {
     //1. Compute the mean of entire data
     pointType mx = utils::ParallelAddMatrixNP(pMatrix).get_result()/pMatrix.cols();
-    
+
     //2. Compute distance of every point from the mean || Variance
     pointType dists = utils::ParallelDistanceComputeNP(pMatrix, mx).get_result();
-    
+
     //3. argort the distance to find approximate mediod
     std::vector<int> idx(end-begin);
     std::iota(std::begin(idx), std::end(idx), 0);
     auto comp_x = [&dists](int a, int b) { return dists[a] > dists[b]; };
     std::sort(std::begin(idx), std::end(idx), comp_x);
     std::cout<<"Max distance: " << dists[idx[0]] << std::endl;
-    
+
     //4. Compute distance of every point from the mediod
     mx = pMatrix.col(idx[0]);
     dists = utils::ParallelDistanceComputeNP(pMatrix, mx).get_result();
-    
+
     int scale_val = std::ceil(std::log(dists.maxCoeff())/std::log(base));
     std::cout<<"Scale chosen: " << scale_val << std::endl;
     pointType temp = pMatrix.col(idx[0]);
@@ -832,7 +832,7 @@ CoverTree::CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, i
             // std::cout << i << std::endl;
         // insert(pMatrix.col(idx[i]));
     // }
-    
+
     int run_till = 50000<end ? 50000 : end;
     for (int i = 1; i < run_till; ++i){
         utils::progressbar(i, run_till);
@@ -841,13 +841,13 @@ CoverTree::CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, i
     }
     utils::progressbar(run_till, run_till);
     std::cout<<std::endl;
-    
+
     utils::parallel_for_progressbar(50000,end,[&](int i)->void{
     //for (int i = begin + 1; i < end; ++i){
         //utils::progressbar(i, end-50000);
         if(!insert(pMatrix.col(idx[i])))
             std::cout << "Insert failed!!!" << std::endl;
-    });    
+    });
 }
 
 //constructor: cover tree using points in the list between begin and end
@@ -1034,7 +1034,7 @@ std::ostream& operator<<(std::ostream& os, const CoverTree& ct)
 std::vector<pointType> CoverTree::get_points()
 {
     std::vector<pointType> points;
-    
+
     std::stack<CoverTree::Node*> travel;
     CoverTree::Node* current;
 

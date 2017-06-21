@@ -109,7 +109,7 @@ pointType bruteForceNeighbor(std::vector<pointType>& pointList, pointType queryP
     pointType ridiculous = 1e200 * queryPt;
     pointType minPoint = ridiculous;
     double minDist = 1e300, curDist; // ridiculously high number
-    
+
 
     for (const auto& p : pointList)
     {
@@ -121,14 +121,14 @@ pointType bruteForceNeighbor(std::vector<pointType>& pointList, pointType queryP
             minPoint = p;
         }
     }
-    //std::cout << "Min Point: " << minPoint.format(CommaInitFmt) 
+    //std::cout << "Min Point: " << minPoint.format(CommaInitFmt)
     //        << " for query " << queryPt.format(CommaInitFmt) << std::endl;
 
     if (minPoint == ridiculous)
     {
         throw std::runtime_error("Something is wrong! Brute force neighbor failed!\n");
     }
-    
+
     return minPoint;
 }
 
@@ -140,7 +140,7 @@ void rangeBruteForce(std::vector<pointType>& pointList, pointType queryPt, doubl
             throw std::runtime_error( "Error in correctness - range!\n" );
         }
     }
-    
+
     // Check for completeness
     int numPoints = 0;
     for (const auto& pt: pointList)
@@ -168,12 +168,12 @@ void nearNeighborBruteForce(std::vector<pointType> pointList, pointType queryPt,
     for (const auto& node: nnList){
         if ( (node - queryPt).norm() > leastClose + 1e-6){
         std::cout << leastClose << " " << (node-queryPt).norm() << std::endl;
-            for (const auto& n: nnList) 
+            for (const auto& n: nnList)
                 std::cout << (n-queryPt).norm() << std::endl;
             throw std::runtime_error( "Error in correctness - knn (dist)!" );
         }
     }
-    
+
     // Check for completeness
     int numPoints = 0;
     std::vector<double> dists;
@@ -202,13 +202,13 @@ int main(int argv, char** argc)
 
     std::cout << argc[1] << std::endl;
     std::cout << argc[2] << std::endl;
-    
+
     Eigen::setNbThreads(1);
     std::cout << "Number of OpenMP threads: " << Eigen::nbThreads();
 
     Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", "[", "]");
     std::chrono::high_resolution_clock::time_point ts, tn;
-    
+
     // Reading the file for points
     //Eigen::MatrixXd pointMatrix = readPointFile(argc[1]);
     std::vector<pointType> pointList = readPointFileList(argc[1]);
@@ -216,15 +216,15 @@ int main(int argv, char** argc)
     CoverTree* cTree;
     // Parallel Cover tree construction
     ts = std::chrono::high_resolution_clock::now();
-    cTree = CoverTree::from_points(pointList, -1, false);  
-    //cTree = CoverTree::from_matrix(pointMatrix, -1, false);  
+    cTree = CoverTree::from_points(pointList, -1, false);
+    //cTree = CoverTree::from_matrix(pointMatrix, -1, false);
     tn = std::chrono::high_resolution_clock::now();
     std::cout << "Build time: " << std::chrono::duration_cast<std::chrono::milliseconds>(tn - ts).count() << std::endl;
     std::cout << "Number of points in the tree: " << cTree->count_points() << std::endl;
 
     // find the nearest neighbor
     std::vector<pointType> testPointList = readPointFileList(argc[2]);
-    
+
     //Serial search
     //double tsum = 0;
     // std::cout << "Querying serially" << std::endl;
@@ -289,14 +289,14 @@ int main(int argv, char** argc)
         std::cout << "Nearest Neighbour test failed!" << std::endl;
     else
         std::cout << "Nearest Neighbour test passed!" << std::endl;
-    
+
     //std::cout << "k-NN serially" << std::endl;
     //for (const auto& queryPt : testPointList)
     //{
     //  std::vector<point> nnList = cTree->nearNeighbors(queryPt, 2);
         //  nearNeighborBruteForce(pointList, queryPt, 2, nnList);
     //}
-    
+
     //std::cout << "range serially" << std::endl;
     //std::vector<point> nnList = cTree->rangeNeighbors(testPointList[0], 10);
         //rangeBruteForce(pointList, testPointList[0], 10, nnList);

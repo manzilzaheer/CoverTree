@@ -84,7 +84,7 @@ namespace utils
             thread.get();
         return f;
     }
-    
+
     static inline void progressbar(unsigned int x, unsigned int n, unsigned int w = 50){
         if ( (x != n) && (x % (n/10+1) != 0) ) return;
 
@@ -134,7 +134,7 @@ namespace utils
         auto current = foo.load();
         while (!foo.compare_exchange_weak(current, current + bar));
     }
-    
+
     class ParallelAddList
     {
         int left;
@@ -192,13 +192,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
     class ParallelAddMatrix
     {
         int left;
@@ -256,13 +256,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
     class ParallelAddMatrixNP
     {
         int left;
@@ -320,13 +320,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
     class ParallelDistanceComputeList
     {
         int left;
@@ -385,13 +385,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
     class ParallelDistanceCompute
     {
         int left;
@@ -450,13 +450,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
     class ParallelDistanceComputeNP
     {
         int left;
@@ -515,13 +515,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
 
     int read_wordmap(std::string wordmapfile, std::map<std::string, unsigned> * pword2id);
     int write_wordmap(std::string wordmapfile, std::map<std::string, unsigned> * pword2id);
