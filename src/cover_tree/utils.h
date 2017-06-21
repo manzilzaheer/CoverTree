@@ -24,6 +24,13 @@ typedef unsigned __int64 uint64_t;
 
 namespace utils
 {
+    static inline void pause()
+    {
+        // Only use this function if a human is involved!
+        std::cout << "Press any key to continue..." << std::flush;
+        std::cin.get();
+    }
+
     template<class InputIt, class UnaryFunction>
     UnaryFunction parallel_for_each(InputIt first, InputIt last, UnaryFunction f)
     {

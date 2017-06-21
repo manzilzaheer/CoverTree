@@ -303,8 +303,12 @@ int main(int argv, char** argc)
 
     //tn = std::chrono::high_resolution_clock::now();
     //std::cout << "Query time: " << std::chrono::duration_cast<std::chrono::milliseconds>(tn - ts).count() << std::endl;
-    system("pause");
+
+    std::cout << "Finnished!" << std::endl;
+
+    utils::pause();
 
     // Success
     return 0;
 }
+
