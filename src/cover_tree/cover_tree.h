@@ -154,7 +154,7 @@ protected:
     //unsigned N;                       // Number of points in the cover tree
     unsigned D;                         // Dimension of the points
 
-	std::SHARED_MUTEX_TYPE global_mut;	// lock for changing the root
+    std::SHARED_MUTEX_TYPE global_mut;  // lock for changing the root
 
     /*** Insert point or node at current node ***/
     bool insert(Node* current, const pointType& p);

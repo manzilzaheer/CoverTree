@@ -16,7 +16,7 @@ double* CoverTree::powdict = compute_pow_table();
 /******************************* Insert ***********************************************/
 bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
 {
-	bool result = false;
+    bool result = false;
 #ifdef DEBUG
     if (current->dist(p) > current->covdist())
         throw std::runtime_error("Internal insert got wrong input!");
@@ -53,7 +53,7 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
             //release read lock then enter child
             current->mut.unlock_shared();
             flag = false;
-			std::cout << "Duplicate entry!!!" << std::endl;
+            std::cout << "Duplicate entry!!!" << std::endl;
             break;
         }
         else if (dist_child <= child->covdist())
@@ -78,7 +78,7 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
         {
             int new_id = ++N;
             current->setChild(p, new_id);
-			result = true;
+            result = true;
             current->mut.unlock();
 
             int local_min = min_scale.load();
@@ -98,12 +98,12 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
             // //std::cout << minScale << " " << maxScale << std::endl;
         // }
     }
-	return result;
+    return result;
 }
 
 bool CoverTree::insert(CoverTree::Node* current, CoverTree::Node* p)
 {
-	bool result = false;
+    bool result = false;
     std::cout << "Node insert called!";
 #ifdef DEBUG
     if (current->dist(p) > current->covdist())
@@ -163,7 +163,7 @@ bool CoverTree::insert(CoverTree::Node* current, CoverTree::Node* p)
         {
             ++N;
             current->setChild(p);
-			result = true;
+            result = true;
             current->mut.unlock();
 
             int local_min = min_scale.load();
@@ -183,20 +183,20 @@ bool CoverTree::insert(CoverTree::Node* current, CoverTree::Node* p)
             // //std::cout << minScale << " " << maxScale << std::endl;
         // }
     }
-	return result;
+    return result;
 }
 
 bool CoverTree::insert(const pointType& p)
 {
-	bool result = false;
+    bool result = false;
     id_valid = false;
-	global_mut.lock_shared();
+    global_mut.lock_shared();
     if (root->dist(p) > root->covdist())
     {
-		global_mut.unlock_shared();
+        global_mut.unlock_shared();
         std::cout<<"Entered case 1: " << root->dist(p) << " " << root->covdist() << " " << root->level <<std::endl;
-		std::cout<<"Requesting global lock!" <<std::endl;
-		global_mut.lock();
+        std::cout<<"Requesting global lock!" <<std::endl;
+        global_mut.lock();
         while (root->dist(p) > base * root->covdist()/(base-1))
         {
             CoverTree::Node* current = root;
@@ -230,17 +230,17 @@ bool CoverTree::insert(const pointType& p)
         root->parent = temp;
         root = temp;
         max_scale = root->level;
-		result = true;
+        result = true;
         //std::cout << "Upward: " << minScale << " " << maxScale << std::endl;
-		global_mut.unlock();
-		global_mut.lock_shared();
+        global_mut.unlock();
+        global_mut.lock_shared();
     }
     else
     {
         //root->tempDist = root->dist(p);
         result = insert(root, p);
     }
-	global_mut.unlock_shared();
+    global_mut.unlock_shared();
     return result;
 }
 
