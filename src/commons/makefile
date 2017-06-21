@@ -10,3 +10,6 @@ intel:
 inteltogether:
 	@echo Nothing here -- just common files
 
+llvm:
+	@echo Nothing here -- just common files
+

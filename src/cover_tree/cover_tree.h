@@ -11,6 +11,12 @@
 #include <vector>
 #include <shared_mutex>
 
+#ifdef __clang__
+#define SHARED_MUTEX_TYPE shared_mutex
+#else
+#define SHARED_MUTEX_TYPE shared_timed_mutex
+#endif
+
 #include <Eigen/Core>
 typedef Eigen::VectorXd pointType;
 //typedef pointType::Scalar dtype;
@@ -35,7 +41,7 @@ public:
         unsigned ID;                        // unique ID of current node
         Node* parent;                       // parent of current node
 
-        mutable std::shared_timed_mutex mut;// lock for current node
+        mutable std::SHARED_MUTEX_TYPE mut;// lock for current node
         
         /*** Node modifiers ***/
         double covdist()                    // covering distance of subtree at current node
@@ -148,7 +154,7 @@ protected:
     //unsigned N;                       // Number of points in the cover tree
     unsigned D;                         // Dimension of the points
 	
-	std::shared_timed_mutex global_mut;	// lock for changing the root
+	std::SHARED_MUTEX_TYPE global_mut;	// lock for changing the root
 
     /*** Insert point or node at current node ***/
     bool insert(Node* current, const pointType& p);

@@ -57,6 +57,17 @@ The make file has some useful features:
      make inteltogether
    ```
 
+- Yet an other alternative is to use the LLVM/CLang compiler (minimal required version is 3.4, for c++14 support)
+
+   ```bash
+     make llvm
+   ```
+
+For this to work under linux,
+you would probably have to install at least these packages
+(in version 3.4 or later):
+clang libc++-dev
+
 - Also you can selectively compile individual modules by specifying
 
    ```bash

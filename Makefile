@@ -17,6 +17,9 @@ intel: dir compile
 inteltogether: CTYPE = inteltogether
 inteltogether: dir compile
 
+llvm: CTYPE = llvm
+llvm: dir compile
+
 
 dir:
 	@echo Setting up directories
