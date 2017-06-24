@@ -130,7 +130,7 @@ namespace utils
 
         unsigned cores = std::thread::hardware_concurrency();
         const size_t total_length = last - first;
-        const size_t chunk_length = total_length / cores;
+        const size_t chunk_length = std::max(size_t(total_length / cores), size_t(1));
 
         auto task = [&f,&chunk_length](size_t start, size_t end)->void{
             for (; start < end; ++start){
