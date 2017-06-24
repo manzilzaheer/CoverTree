@@ -50,6 +50,10 @@ namespace utils
     template<class InputIt, class UnaryFunction>
     UnaryFunction parallel_for_each(InputIt first, InputIt last, UnaryFunction f)
     {
+        if (first >= last) {
+            return f;
+        }
+
         unsigned cores = std::thread::hardware_concurrency();
 
         auto task = [&f](InputIt start, InputIt end)->void{
@@ -77,6 +81,10 @@ namespace utils
     template<class UnaryFunction>
     UnaryFunction parallel_for(size_t first, size_t last, UnaryFunction f)
     {
+        if (first >= last) {
+            return f;
+        }
+
         unsigned cores = std::thread::hardware_concurrency();
 
         auto task = [&f](size_t start, size_t end)->void{
@@ -116,6 +124,10 @@ namespace utils
     template<class UnaryFunction>
     UnaryFunction parallel_for_progressbar(size_t first, size_t last, UnaryFunction f)
     {
+        if (first >= last) {
+            return f;
+        }
+
         unsigned cores = std::thread::hardware_concurrency();
         const size_t total_length = last - first;
         const size_t chunk_length = total_length / cores;

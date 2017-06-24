@@ -27,6 +27,10 @@
 template<class UnaryFunction>
 UnaryFunction parallel_for_each(size_t first, size_t last, UnaryFunction f)
 {
+    if (first >= last) {
+        return f;
+    }
+
   unsigned cores = std::thread::hardware_concurrency();
   //std::cout << "Number of cores: " << cores << std::endl;
 
@@ -67,6 +71,10 @@ static inline void progressbar(unsigned int x, unsigned int n, unsigned int w = 
 template<class UnaryFunction>
 UnaryFunction parallel_for_progressbar(size_t first, size_t last, UnaryFunction f)
 {
+    if (first >= last) {
+        return f;
+    }
+
     unsigned cores = std::thread::hardware_concurrency();
     const size_t total_length = last - first;
     const size_t chunk_length = total_length / cores;
