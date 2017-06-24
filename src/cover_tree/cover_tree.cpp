@@ -677,11 +677,11 @@ bool CoverTree::check_covering() const
 
 //constructor: NULL tree
 CoverTree::CoverTree(const int truncate /*=-1*/ )
-    : id_valid(false)
-    , root(NULL)
+    : root(NULL)
     , min_scale(1000)
     , max_scale(0)
     , truncate_level(truncate)
+    , id_valid(false)
     , N(0)
     , D(0)
 {
