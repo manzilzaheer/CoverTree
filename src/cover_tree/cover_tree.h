@@ -197,7 +197,7 @@ protected:
 
 public:
     /*** Internal Contructors ***/
-    /*** Constructor: needs atleast 1 point to make a valid covertree ***/
+    /*** Constructor: needs at least 1 point to make a valid cover-tree ***/
     // NULL tree
     CoverTree(int truncate = -1);
     // cover tree with one point as root

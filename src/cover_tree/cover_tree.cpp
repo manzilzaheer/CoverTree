@@ -46,7 +46,7 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
     if (truncate_level > 0 && current->level < max_scale-truncate_level)
         return false;
 
-    //acquire read lock
+    // acquire read lock
     current->mut.lock_shared();
 
     // Sort the children
@@ -66,7 +66,7 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
         double dist_child = dists[child_idx];
         if (dist_child <= 0.0)
         {
-            //release read lock then enter child
+            // release read lock then enter child
             current->mut.unlock_shared();
             flag = false;
             std::cout << "Duplicate entry!!!" << std::endl;
@@ -74,7 +74,7 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
         }
         else if (dist_child <= child->covdist())
         {
-            //release read lock then enter child
+            // release read lock then enter child
             if (child->maxdistUB < dist_child)
                 child->maxdistUB = dist_child;
             current->mut.unlock_shared();
@@ -86,7 +86,7 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
 
     if (flag)
     {
-        //release read lock then acquire write lock
+        // release read lock then acquire write lock
         current->mut.unlock_shared();
         current->mut.lock();
         // check if insert is still valid, i.e. no other point was inserted else restart
@@ -108,11 +108,11 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
             current->mut.unlock();
             result = insert(current, p);
         }
-        // if (min_scale > current->level - 1)
-        // {
-            // min_scale = current->level - 1;
-            // //std::cout << minScale << " " << maxScale << std::endl;
-        // }
+        //if (min_scale > current->level - 1)
+        //{
+            //min_scale = current->level - 1;
+            ////std::cout << minScale << " " << maxScale << std::endl;
+        //}
     }
     return result;
 }
@@ -134,7 +134,7 @@ bool CoverTree::insert(CoverTree::Node* current, CoverTree::Node* p)
     if (truncate_level > 0 && current->level < max_scale-truncate_level)
         return false;
 
-    //acquire read lock
+    // acquire read lock
     current->mut.lock_shared();
 
     // Sort the children
@@ -154,14 +154,14 @@ bool CoverTree::insert(CoverTree::Node* current, CoverTree::Node* p)
         double dist_child = dists[child_idx];
         if (dist_child <= 0.0)
         {
-            //release read lock then enter child
+            // release read lock then enter child
             current->mut.unlock_shared();
             flag = false;
             break;
         }
         else if (dist_child <= child->covdist())
         {
-            //release read lock then enter child
+            // release read lock then enter child
             current->mut.unlock_shared();
             result = insert(child, p);
             flag = false;
@@ -171,7 +171,7 @@ bool CoverTree::insert(CoverTree::Node* current, CoverTree::Node* p)
 
     if (flag)
     {
-        //release read lock then acquire write lock
+        // release read lock then acquire write lock
         current->mut.unlock_shared();
         current->mut.lock();
         // check if insert is still valid, i.e. no other point was inserted else restart
@@ -193,11 +193,11 @@ bool CoverTree::insert(CoverTree::Node* current, CoverTree::Node* p)
             current->mut.unlock();
             result = insert(current, p);
         }
-        // if (min_scale > current->level - 1)
-        // {
-            // min_scale = current->level - 1;
-            // //std::cout << minScale << " " << maxScale << std::endl;
-        // }
+        //if (min_scale > current->level - 1)
+        //{
+            //min_scale = current->level - 1;
+            ////std::cout << minScale << " " << maxScale << std::endl;
+        //}
     }
     return result;
 }
@@ -266,7 +266,7 @@ bool CoverTree::insert(const pointType& p)
 bool CoverTree::remove(const pointType &p)
 {
     bool ret_val = false;
-    //First find the point
+    // First find the point
     std::pair<CoverTree::Node*, double> result(root, root->dist(p));
     NearestNeighbour(root, result.second, p, result);
 
@@ -280,7 +280,7 @@ bool CoverTree::remove(const pointType &p)
         }
         else
         {
-            //1. Remove p from parent's list of child
+            // 1. Remove p from parent's list of child
             unsigned num_children = parent_p->children.size();
             for (unsigned i = 0; i < num_children; ++i)
             {
@@ -293,7 +293,7 @@ bool CoverTree::remove(const pointType &p)
 
             }
 
-            //2. For each child q of p:
+            // 2. For each child q of p:
             for(CoverTree::Node* q : *node_p)
             {
                 CoverTree::insert(root, q);
@@ -453,12 +453,12 @@ void CoverTree::generate_id(CoverTree::Node* current)
     std::cout << "Pre: " << current->ID << std::endl;
 #endif
 
-    // travrse children
+    // traverse children
     for (const auto& child : *current)
         generate_id(child);
 }
 
-//find true maxdist
+// find true maxdist
 void CoverTree::calc_maxdist()
 {
     std::vector<CoverTree::Node*> travel;
@@ -518,7 +518,7 @@ char* CoverTree::preorder_pack(char* buff, CoverTree::Node* current) const
     std::cout << "Pre: " << current->ID << std::endl;
 #endif
 
-    // travrse children
+    // traverse children
     for (const auto& child : *current)
         buff = preorder_pack(buff, child);
 
@@ -528,7 +528,7 @@ char* CoverTree::preorder_pack(char* buff, CoverTree::Node* current) const
 // Post-order traversal
 char* CoverTree::postorder_pack(char* buff, CoverTree::Node* current) const
 {
-    // travrse children
+    // traverse children
     for (const auto& child : *current)
         buff = postorder_pack(buff, child);
 
@@ -548,7 +548,7 @@ char* CoverTree::postorder_pack(char* buff, CoverTree::Node* current) const
 // reconstruct tree from Pre&Post traversals
 void CoverTree::PrePost(CoverTree::Node*& current, char*& pre, char*& post)
 {
-    // The top element in preorder list PRE is the root of T
+    // The top element in pre-order list PRE is the root of T
     current = new CoverTree::Node;
     current->_p = pointType(D);
     for (unsigned i = 0; i < D; ++i)
@@ -561,7 +561,7 @@ void CoverTree::PrePost(CoverTree::Node*& current, char*& pre, char*& post)
     current->maxdistUB = 0;
     pre += sizeof(int);
 
-    // Construct subtrees until the root is found in the postorder list
+    // Construct sub-trees until the root is found in the post-order list
     while (*((unsigned*)post) != current->ID)
     {
         CoverTree::Node* temp = NULL;
@@ -569,8 +569,8 @@ void CoverTree::PrePost(CoverTree::Node*& current, char*& pre, char*& post)
         current->children.push_back(temp);
     }
 
-    //All subtrees of T are constructed
-    post += sizeof(unsigned);       //Delete top element of POST
+    // All sub-trees of T are constructed
+    post += sizeof(unsigned); // Delete top element of POST
 }
 
 unsigned CoverTree::msg_size() const
@@ -593,7 +593,7 @@ char* CoverTree::serialize() const
     //}
     //count_points();
 
-    //Covert following to char* buff with following order
+    // Covert following to char* buff with following order
     // N | D | (points, levels) | List
     char* buff = new char[msg_size()];
 
@@ -632,11 +632,11 @@ void CoverTree::deserialize(char* buff)
     D = *((unsigned *)buff);
     buff += sizeof(unsigned);
 
-    // pointer to postorder list
+    // pointer to post-order list
     char* post = buff + sizeof(pointType::Scalar)*D*N
         + sizeof(int)*N;
 
-    //reconstruction
+    // reconstruction
     N = 0;
     PrePost(root, buff, post);
 
@@ -675,7 +675,7 @@ bool CoverTree::check_covering() const
 
 /****************************** Internal Constructors of Cover Trees *************************************/
 
-//constructor: NULL tree
+// constructor: NULL tree
 CoverTree::CoverTree(const int truncate /*=-1*/ )
     : root(NULL)
     , min_scale(1000)
@@ -687,7 +687,7 @@ CoverTree::CoverTree(const int truncate /*=-1*/ )
 {
 }
 
-//constructor: needs atleast 1 point to make a valid covertree
+// constructor: needs at least 1 point to make a valid cover-tree
 CoverTree::CoverTree(const pointType& p, int truncateArg /*=-1*/)
 {
     min_scale = 1000;
@@ -702,7 +702,7 @@ CoverTree::CoverTree(const pointType& p, int truncateArg /*=-1*/)
     root->maxdistUB = 0;
 }
 
-//constructor: cover tree using points in the list between begin and end
+// constructor: cover tree using points in the list between begin and end
 CoverTree::CoverTree(std::vector<pointType>& pList, int begin, int end, int truncateArg /*= 0*/)
 {
     //1. Compute the mean of entire data
@@ -736,7 +736,7 @@ CoverTree::CoverTree(std::vector<pointType>& pList, int begin, int end, int trun
     root->level = scale_val; //-1000;
     root->maxdistUB = powdict[scale_val+1024];
 
-    int run_till = 50000<end ? 50000 : end;
+    int run_till = 50000 < end ? 50000 : end;
     for (int i = 1; i < run_till; ++i){
         utils::progressbar(i, run_till);
         if(!insert(pList[idx[i]]))
@@ -755,7 +755,7 @@ CoverTree::CoverTree(std::vector<pointType>& pList, int begin, int end, int trun
     });
 }
 
-//constructor: cover tree using points in the list between begin and end
+// constructor: cover tree using points in the list between begin and end
 CoverTree::CoverTree(Eigen::MatrixXd& pMatrix, int begin, int end, int truncateArg /*= 0*/)
 {
     //1. Compute the mean of entire data
@@ -808,7 +808,7 @@ CoverTree::CoverTree(Eigen::MatrixXd& pMatrix, int begin, int end, int truncateA
     });
 }
 
-//constructor: cover tree using points in the list between begin and end
+// constructor: cover tree using points in the list between begin and end
 CoverTree::CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, int truncateArg /*= 0*/)
 {
     //1. Compute the mean of entire data
@@ -867,7 +867,7 @@ CoverTree::CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, i
     });
 }
 
-//constructor: cover tree using points in the list between begin and end
+// constructor: cover tree using points in the list between begin and end
 // CoverTree::CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, int truncateArg /*= 0*/)
 // {
     // pointType temp = pMatrix.col(begin);
@@ -892,7 +892,7 @@ CoverTree::CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, i
     // }//);
 // }
 
-//destructor: deallocating all memories by a post order traversal
+// destructor: deallocating all memories by a post order traversal
 CoverTree::~CoverTree()
 {
     std::stack<CoverTree::Node*> travel;
@@ -917,7 +917,7 @@ CoverTree::~CoverTree()
 
 /****************************** Public API for creation of Cover Trees *************************************/
 
-//contructor: using point list
+// constructor: using point list
 CoverTree* CoverTree::from_points(std::vector<pointType>& pList, int truncate /*=-1*/, bool use_multi_core /*=true*/)
 {
     CoverTree* cTree = NULL;
@@ -936,7 +936,7 @@ CoverTree* CoverTree::from_points(std::vector<pointType>& pList, int truncate /*
     return cTree;
 }
 
-//contructor: using matrix in row-major form!
+// constructor: using matrix in row-major form!
 CoverTree* CoverTree::from_matrix(Eigen::MatrixXd& pMatrix, int truncate /*=-1*/, bool use_multi_core /*=true*/)
 {
     std::cout << "Faster Cover Tree with base " << CoverTree::base << std::endl;
@@ -957,7 +957,7 @@ CoverTree* CoverTree::from_matrix(Eigen::MatrixXd& pMatrix, int truncate /*=-1*/
     return cTree;
 }
 
-//contructor: using matrix in col-major form!
+// constructor: using matrix in col-major form!
 CoverTree* CoverTree::from_matrix(Eigen::Map<Eigen::MatrixXd>& pMatrix, int truncate /*=-1*/, bool use_multi_core /*=true*/)
 {
     std::cout << "Faster Cover Tree with base " << CoverTree::base << std::endl;
@@ -980,7 +980,7 @@ CoverTree* CoverTree::from_matrix(Eigen::Map<Eigen::MatrixXd>& pMatrix, int trun
 
 /******************************************* Auxiliary Functions ***************************************************/
 
-//get root level == max_level
+// get root level == max_level
 int CoverTree::get_level()
 {
     return root->level;
@@ -1025,7 +1025,7 @@ std::ostream& operator<<(std::ostream& os, const CoverTree& ct)
     // Initialize with root
     travel.push(ct.root);
 
-    // Qualititively keep track of number of prints
+    // Qualitatively keep track of number of prints
     int numPrints = 0;
     // Pop, print and then push the children
     while (!travel.empty())
