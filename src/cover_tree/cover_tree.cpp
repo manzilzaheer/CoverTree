@@ -688,14 +688,14 @@ CoverTree::CoverTree(const int truncate /*=-1*/ )
 }
 
 // constructor: needs at least 1 point to make a valid cover-tree
-CoverTree::CoverTree(const pointType& p, int truncateArg /*=-1*/)
+CoverTree::CoverTree(const pointType& p, int truncate /*=-1*/)
+    : min_scale(1000)
+    , max_scale(0)
+    , truncate_level(truncate)
+    , id_valid(false)
+    , N(1)
+    , D(p.rows())
 {
-    min_scale = 1000;
-    max_scale = 0;
-    truncate_level = truncateArg;
-    N = 1;
-    D = p.rows();
-
     root = new CoverTree::Node;
     root->_p = p;
     root->level = 0;
