@@ -40,10 +40,10 @@ UnaryFunction parallel_for_each(size_t first, size_t last, UnaryFunction f)
   };
 
   const size_t total_length = last - first;
-  const size_t chunk_length = total_length / cores;
+  const size_t chunk_length = std::max(size_t(total_length / cores), size_t(1));
   size_t chunk_start = first;
   std::vector<std::future<void>>  for_threads;
-  for (unsigned i = 0; i < cores - 1; ++i)
+  for (unsigned i = 0; i < (cores - 1) && i < total_length; ++i)
   {
     const auto chunk_stop = chunk_start + chunk_length;
     for_threads.push_back(std::async(std::launch::async, task, chunk_start, chunk_stop));
@@ -88,7 +88,7 @@ UnaryFunction parallel_for_progressbar(size_t first, size_t last, UnaryFunction 
 
     size_t chunk_start = first;
     std::vector<std::future<void>>  for_threads;
-    for (unsigned i = 0; i < cores - 1; ++i)
+    for (unsigned i = 0; i < (cores - 1) && i < total_length; ++i)
     {
         const auto chunk_stop = chunk_start + chunk_length;
         for_threads.push_back(std::async(std::launch::async, task, chunk_start, chunk_stop));
