@@ -199,7 +199,7 @@ public:
     /*** Internal Contructors ***/
     /*** Constructor: needs at least 1 point to make a valid cover-tree ***/
     // NULL tree
-    CoverTree(int truncate = -1);
+    explicit CoverTree(int truncate = -1);
     // cover tree with one point as root
     CoverTree(const pointType& p, int truncate = -1);
     // cover tree using points in the list between begin and end

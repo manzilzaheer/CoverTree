@@ -179,7 +179,7 @@ namespace utils
         }
 
     public:
-        ParallelAddList(std::vector<Eigen::VectorXd>& pL) : pList(pL)
+        explicit ParallelAddList(std::vector<Eigen::VectorXd>& pL) : pList(pL)
         {
             this->left = 0;
             this->right = pL.size();
@@ -243,7 +243,7 @@ namespace utils
         }
 
     public:
-        ParallelAddMatrix(Eigen::MatrixXd& pM) : pMatrix(pM)
+        explicit ParallelAddMatrix(Eigen::MatrixXd& pM) : pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
@@ -307,7 +307,7 @@ namespace utils
         }
 
     public:
-        ParallelAddMatrixNP(Eigen::Map<Eigen::MatrixXd>& pM) : pMatrix(pM)
+        explicit ParallelAddMatrixNP(Eigen::Map<Eigen::MatrixXd>& pM) : pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
