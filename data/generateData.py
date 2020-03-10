@@ -9,9 +9,9 @@ x=[];
 for k in range(numK):
 	x.append( means[k] +  np.random.randn(numPts,numDims) );
 x = np.vstack(x);
-print 'Data generated'
+print('Data generated')
 np.random.shuffle(x);
-print 'Data shuffled'
+print('Data shuffled')
 
 filePath = 'data/train_'+str(numDims)+'d_'+str(numK)+'k_'+str(numPts)+'.dat';
 filePt = open(filePath, 'w');
@@ -22,9 +22,9 @@ tmp = np.array(numDims, dtype='int32');
 tmp.tofile(filePt);
 x.tofile(filePt) #, x, delimiter=' ', newline='\n');
 filePt.close();
-print x[0,0]
-print x[0,1]
-print x[1,0]
+print(x[0,0])
+print(x[0,1])
+print(x[1,0])
 
 numPts = 10
 
