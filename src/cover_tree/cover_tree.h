@@ -1,4 +1,20 @@
-﻿# ifndef _COVER_TREE_H
+﻿/*
+ * Copyright (c) 2017 Manzil Zaheer All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+# ifndef _COVER_TREE_H
 # define _COVER_TREE_H
 
 //#define DEBUG
@@ -10,6 +26,12 @@
 #include <map>
 #include <vector>
 #include <shared_mutex>
+
+#ifdef __clang__
+#define SHARED_MUTEX_TYPE shared_mutex
+#else
+#define SHARED_MUTEX_TYPE shared_timed_mutex
+#endif
 
 #include <Eigen/Core>
 typedef Eigen::VectorXd pointType;
@@ -35,8 +57,8 @@ public:
         unsigned ID;                        // unique ID of current node
         Node* parent;                       // parent of current node
 
-        mutable std::shared_timed_mutex mut;// lock for current node
-        
+        mutable std::SHARED_MUTEX_TYPE mut;// lock for current node
+
         /*** Node modifiers ***/
         double covdist()                    // covering distance of subtree at current node
         {
@@ -74,7 +96,7 @@ public:
                 current->level = level-1;
                 //current->maxdistUB = powdict[level + 1024];
                 travel.push(current);
-                while (travel.size() > 0)
+                while (!travel.empty())
                 {
                     current = travel.top();
                     travel.pop();
@@ -147,8 +169,8 @@ protected:
     std::atomic<unsigned> N;            // Number of points in the cover tree
     //unsigned N;                       // Number of points in the cover tree
     unsigned D;                         // Dimension of the points
-	
-	std::shared_timed_mutex global_mut;	// lock for changing the root
+
+    std::SHARED_MUTEX_TYPE global_mut;  // lock for changing the root
 
     /*** Insert point or node at current node ***/
     bool insert(Node* current, const pointType& p);
@@ -172,12 +194,12 @@ protected:
     unsigned msg_size() const;
     void calc_maxdist();                            //find true maxdist
     void generate_id(Node* current);                //Generate IDs for each node from root as 0
-    
+
 public:
     /*** Internal Contructors ***/
-    /*** Constructor: needs atleast 1 point to make a valid covertree ***/
+    /*** Constructor: needs at least 1 point to make a valid cover-tree ***/
     // NULL tree
-    CoverTree(int truncate = -1);   
+    explicit CoverTree(int truncate = -1);
     // cover tree with one point as root
     CoverTree(const pointType& p, int truncate = -1);
     // cover tree using points in the list between begin and end
@@ -198,11 +220,11 @@ public:
 
     /*** construct cover tree using all points in the matrix in row-major form ***/
     static CoverTree* from_matrix(Eigen::MatrixXd& pMatrix, int truncate = -1, bool use_multi_core = true);
-    
+
     /*** construct cover tree using all points in the matrix in row-major form ***/
     static CoverTree* from_matrix(Eigen::Map<Eigen::MatrixXd>& pMatrix, int truncate = -1, bool use_multi_core = true);
 
-    
+
     /*** Insert point p into the cover tree ***/
     bool insert(const pointType& p);
 
@@ -211,17 +233,17 @@ public:
 
     /*** Nearest Neighbour search ***/
     std::pair<CoverTree::Node*, double> NearestNeighbour(const pointType &p) const;
-    
+
     /*** k-Nearest Neighbour search ***/
     std::vector<std::pair<CoverTree::Node*, double>> kNearestNeighbours(const pointType &p, unsigned k = 10) const;
-    
+
     /*** Range search ***/
     std::vector<std::pair<CoverTree::Node*, double>> rangeNeighbours(const pointType &queryPt, double range = 1.0) const;
 
     /*** Serialize/Desrialize: useful for MPI ***/
     char* serialize() const;                                    // Serialize to a buffer
     void deserialize(char* buff);                               // Deserialize from a buffer
-    
+
     /*** Unit Tests ***/
     bool check_covering() const;
 
@@ -240,3 +262,4 @@ public:
 };
 
 #endif //_COVER_TREE_H
+

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2017 Manzil Zaheer All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <Python.h>
 #include "numpy/arrayobject.h"
 #include "cover_tree.h"
@@ -11,6 +27,10 @@
 template<class UnaryFunction>
 UnaryFunction parallel_for_each(size_t first, size_t last, UnaryFunction f)
 {
+    if (first >= last) {
+        return f;
+    }
+
   unsigned cores = std::thread::hardware_concurrency();
   //std::cout << "Number of cores: " << cores << std::endl;
 
@@ -20,10 +40,10 @@ UnaryFunction parallel_for_each(size_t first, size_t last, UnaryFunction f)
   };
 
   const size_t total_length = last - first;
-  const size_t chunk_length = total_length / cores;
+  const size_t chunk_length = std::max(size_t(total_length / cores), size_t(1));
   size_t chunk_start = first;
   std::vector<std::future<void>>  for_threads;
-  for (unsigned i = 0; i < cores - 1; ++i)
+  for (unsigned i = 0; i < (cores - 1) && i < total_length; ++i)
   {
     const auto chunk_stop = chunk_start + chunk_length;
     for_threads.push_back(std::async(std::launch::async, task, chunk_start, chunk_stop));
@@ -51,9 +71,13 @@ static inline void progressbar(unsigned int x, unsigned int n, unsigned int w = 
 template<class UnaryFunction>
 UnaryFunction parallel_for_progressbar(size_t first, size_t last, UnaryFunction f)
 {
+    if (first >= last) {
+        return f;
+    }
+
     unsigned cores = std::thread::hardware_concurrency();
     const size_t total_length = last - first;
-    const size_t chunk_length = total_length / cores;
+    const size_t chunk_length = std::max(size_t(total_length / cores), size_t(1));
 
     auto task = [&f,&chunk_length](size_t start, size_t end)->void{
         for (; start < end; ++start){
@@ -64,7 +88,7 @@ UnaryFunction parallel_for_progressbar(size_t first, size_t last, UnaryFunction 
 
     size_t chunk_start = first;
     std::vector<std::future<void>>  for_threads;
-    for (unsigned i = 0; i < cores - 1; ++i)
+    for (unsigned i = 0; i < (cores - 1) && i < total_length; ++i)
     {
         const auto chunk_stop = chunk_start + chunk_length;
         for_threads.push_back(std::async(std::launch::async, task, chunk_start, chunk_stop));

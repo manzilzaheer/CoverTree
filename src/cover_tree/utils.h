@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2017 Manzil Zaheer All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #ifndef _UTILS_H
 #define _UTILS_H
 
@@ -24,9 +40,20 @@ typedef unsigned __int64 uint64_t;
 
 namespace utils
 {
+    static inline void pause()
+    {
+        // Only use this function if a human is involved!
+        std::cout << "Press any key to continue..." << std::flush;
+        std::cin.get();
+    }
+
     template<class InputIt, class UnaryFunction>
     UnaryFunction parallel_for_each(InputIt first, InputIt last, UnaryFunction f)
     {
+        if (first >= last) {
+            return f;
+        }
+
         unsigned cores = std::thread::hardware_concurrency();
 
         auto task = [&f](InputIt start, InputIt end)->void{
@@ -35,10 +62,10 @@ namespace utils
         };
 
         const size_t total_length = std::distance(first, last);
-        const size_t chunk_length = total_length / cores;
+        const size_t chunk_length = std::max(size_t(total_length / cores), size_t(1));
         InputIt chunk_start = first;
         std::vector<std::future<void>>  for_threads;
-        for (unsigned i = 0; i < cores - 1; ++i)
+        for (unsigned i = 0; i < (cores - 1) && i < total_length; ++i)
         {
             const auto chunk_stop = std::next(chunk_start, chunk_length);
             for_threads.push_back(std::async(std::launch::async, task, chunk_start, chunk_stop));
@@ -54,6 +81,10 @@ namespace utils
     template<class UnaryFunction>
     UnaryFunction parallel_for(size_t first, size_t last, UnaryFunction f)
     {
+        if (first >= last) {
+            return f;
+        }
+
         unsigned cores = std::thread::hardware_concurrency();
 
         auto task = [&f](size_t start, size_t end)->void{
@@ -62,10 +93,10 @@ namespace utils
         };
 
         const size_t total_length = last - first;
-        const size_t chunk_length = total_length / cores;
+        const size_t chunk_length = std::max(size_t(total_length / cores), size_t(1));
         size_t chunk_start = first;
         std::vector<std::future<void>>  for_threads;
-        for (unsigned i = 0; i < cores - 1; ++i)
+        for (unsigned i = 0; i < (cores - 1) && i < total_length; ++i)
         {
             const auto chunk_stop = chunk_start + chunk_length;
             for_threads.push_back(std::async(std::launch::async, task, chunk_start, chunk_stop));
@@ -77,7 +108,7 @@ namespace utils
             thread.get();
         return f;
     }
-    
+
     static inline void progressbar(unsigned int x, unsigned int n, unsigned int w = 50){
         if ( (x != n) && (x % (n/10+1) != 0) ) return;
 
@@ -93,9 +124,13 @@ namespace utils
     template<class UnaryFunction>
     UnaryFunction parallel_for_progressbar(size_t first, size_t last, UnaryFunction f)
     {
+        if (first >= last) {
+            return f;
+        }
+
         unsigned cores = std::thread::hardware_concurrency();
         const size_t total_length = last - first;
-        const size_t chunk_length = total_length / cores;
+        const size_t chunk_length = std::max(size_t(total_length / cores), size_t(1));
 
         auto task = [&f,&chunk_length](size_t start, size_t end)->void{
             for (; start < end; ++start){
@@ -106,7 +141,7 @@ namespace utils
 
         size_t chunk_start = first;
         std::vector<std::future<void>>  for_threads;
-        for (unsigned i = 0; i < cores - 1; ++i)
+        for (unsigned i = 0; i < (cores - 1) && i < total_length; ++i)
         {
             const auto chunk_stop = chunk_start + chunk_length;
             for_threads.push_back(std::async(std::launch::async, task, chunk_start, chunk_stop));
@@ -127,7 +162,7 @@ namespace utils
         auto current = foo.load();
         while (!foo.compare_exchange_weak(current, current + bar));
     }
-    
+
     class ParallelAddList
     {
         int left;
@@ -144,7 +179,7 @@ namespace utils
         }
 
     public:
-        ParallelAddList(std::vector<Eigen::VectorXd>& pL) : pList(pL)
+        explicit ParallelAddList(std::vector<Eigen::VectorXd>& pL) : pList(pL)
         {
             this->left = 0;
             this->right = pL.size();
@@ -185,13 +220,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
     class ParallelAddMatrix
     {
         int left;
@@ -208,7 +243,7 @@ namespace utils
         }
 
     public:
-        ParallelAddMatrix(Eigen::MatrixXd& pM) : pMatrix(pM)
+        explicit ParallelAddMatrix(Eigen::MatrixXd& pM) : pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
@@ -249,13 +284,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
     class ParallelAddMatrixNP
     {
         int left;
@@ -272,7 +307,7 @@ namespace utils
         }
 
     public:
-        ParallelAddMatrixNP(Eigen::Map<Eigen::MatrixXd>& pM) : pMatrix(pM)
+        explicit ParallelAddMatrixNP(Eigen::Map<Eigen::MatrixXd>& pM) : pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
@@ -313,13 +348,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
     class ParallelDistanceComputeList
     {
         int left;
@@ -378,13 +413,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
     class ParallelDistanceCompute
     {
         int left;
@@ -443,13 +478,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
     class ParallelDistanceComputeNP
     {
         int left;
@@ -508,13 +543,13 @@ namespace utils
 
             return 0;
         }
-        
+
         Eigen::VectorXd get_result()
         {
             return res;
         }
     };
-    
+
 
     int read_wordmap(std::string wordmapfile, std::map<std::string, unsigned> * pword2id);
     int write_wordmap(std::string wordmapfile, std::map<std::string, unsigned> * pword2id);
