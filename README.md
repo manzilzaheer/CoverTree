@@ -1,14 +1,21 @@
-# Cover Trees
+# Tree Based Nearest Neighbor Search with Guarantees
 
-We present a distributed and parallel extension and implementation of Cover Tree data structure for nearest neighbour search. The data structure was originally presented in and improved in:
+We present parallel implementations of two tree based nearest neighbor search data structures: SG-Tree and Cover Tree.
+
+## Cover Tree
+The cover tree data structure was originally presented in and improved in:
 
 1. Alina Beygelzimer, Sham Kakade, and John Langford. "Cover trees for nearest neighbor." Proceedings of the 23rd international conference on Machine learning. ACM, 2006.
 2. Mike Izbicki and Christian Shelton. "Faster cover trees." Proceedings of the 32nd International Conference on Machine Learning (ICML-15). 2015.
+
+## SG-Tree
+SG-Tree is a new data structure for exact nearest neighbor search inspired from Cover Tree and its improvement, which has been used in the [TerraPattern](http://www.terrapattern.com/) project. At a high level, SG-Tree tries to create a hierarchical tree where each node performs a "coarse" clustering. The centers of these "clusters" become the children and subsequent insertions are recursively performed on these children. When performing the NN query, we prune out solutions based on a subset of the dimensions that are being queried. This is particularly useful when trying to find the nearest neighbor in highly clustered subset of the data, e.g. when the data comes from a recursive mixture of Gaussians or more generally time marginalized coalscent process . The effect of these two optimizations is that our data structure is extremely simple, highly parallelizable and is comparable in performance to existing NN implementations on many data-sets. 
  
 Under active development
 
+### New: Moving to Python3
 ### New: Python wrappers added
-Just use `python setup.py install` and then in python you can `import covertree`. The python API details are provided in `API.pdf`.
+Just use `python setup.py install` and then in python you can `import nntree`. The python API details are provided in `API.pdf`.
  If you do not have root priveledges, install with `python setup.py install --user` and make sure to have the folder in path. 
 ## Organisation
 1. All codes are under `src` within respective folder
