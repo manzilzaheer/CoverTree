@@ -27,6 +27,12 @@
 #include <iostream>
 # include <iomanip>
 
+#ifdef _FLOAT64_VER_
+#define MY_NPY_FLOAT NPY_FLOAT64
+#else
+#define MY_NPY_FLOAT NPY_FLOAT32
+#endif
+
 template<class UnaryFunction>
 UnaryFunction parallel_for_each(size_t first, size_t last, UnaryFunction f)
 {
@@ -235,7 +241,7 @@ static PyObject *covertreec_nn(PyObject *self, PyObject *args) {
   //Py_RETURN_NONE;
 
   long dims[2] = {numPoints, numDims};
-  PyObject *out_array = PyArray_SimpleNewFromData(2, dims, PyArray_FLOAT64, results);
+  PyObject *out_array = PyArray_SimpleNewFromData(2, dims, MY_NPY_FLOAT, results);
 
   Py_INCREF(out_array);
   return out_array;
@@ -277,7 +283,7 @@ static PyObject *covertreec_knn(PyObject *self, PyObject *args) {
   //Py_RETURN_NONE;
 
   long dims[3] = {numPoints, k, numDims};
-  PyObject *out_array = PyArray_SimpleNewFromData(3, dims, PyArray_FLOAT64, results);
+  PyObject *out_array = PyArray_SimpleNewFromData(3, dims, MY_NPY_FLOAT, results);
 
   Py_INCREF(out_array);
   return out_array;
@@ -336,7 +342,7 @@ PyMODINIT_FUNC PyInit_covertreec(void)
                                  CovertreecMethods};
   m = PyModule_Create(&mdef);
   if ( m == NULL )
-    return;
+    return NULL;
 
   /* IMPORTANT: this must be called */
   import_array();
