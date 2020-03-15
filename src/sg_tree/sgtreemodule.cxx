@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#define PY_SSIZE_T_CLEAN
+
 #include <Python.h>
 #include "numpy/arrayobject.h"
 #include "cover_tree.h"
@@ -312,7 +315,7 @@ static PyObject *covertreec_test_covering(PyObject *self, PyObject *args) {
   Py_RETURN_FALSE;
 }
 
-PyMODINIT_FUNC initcovertreec(void)
+PyMODINIT_FUNC PyInit_covertreec(void)
 {
   PyObject *m;
   static PyMethodDef CovertreecMethods[] = {
@@ -326,7 +329,12 @@ PyMODINIT_FUNC initcovertreec(void)
     {"test_covering", covertreec_test_covering, METH_VARARGS, "Check if covering property is satisfied."},
     {NULL, NULL, 0, NULL}
   };
-  m = Py_InitModule("covertreec", CovertreecMethods);
+  static struct PyModuleDef mdef = {PyModuleDef_HEAD_INIT,
+                                 "covertreec",
+                                 "Example module that creates an extension type.",
+                                 -1,
+                                 CovertreecMethods};
+  m = PyModule_Create(&mdef);
   if ( m == NULL )
     return;
 
@@ -336,17 +344,29 @@ PyMODINIT_FUNC initcovertreec(void)
   CovertreecError = PyErr_NewException("covertreec.error", NULL, NULL);
   Py_INCREF(CovertreecError);
   PyModule_AddObject(m, "error", CovertreecError);
+
+  return m;
 }
 
 int main(int argc, char *argv[])
 {
+  /* Convert to wchar */
+  wchar_t *program = Py_DecodeLocale(argv[0], NULL);
+  if (program == NULL) {
+     std::cerr << "Fatal error: cannot decode argv[0]" << std::endl;
+     return 1;
+  }
+  
+  /* Add a built-in module, before Py_Initialize */
+  //PyImport_AppendInittab("covertreec", PyInit_covertreec);
+    
   /* Pass argv[0] to the Python interpreter */
-  Py_SetProgramName(argv[0]);
+  Py_SetProgramName(program);
 
   /* Initialize the Python interpreter.  Required. */
   Py_Initialize();
 
   /* Add a static module */
-  initcovertreec();
+  //PyInit_covertreec();
 }
 
