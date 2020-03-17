@@ -232,7 +232,7 @@ namespace utils
         int left;
         int right;
         pointType res;
-        Eigen::MatrixXd& pMatrix;
+        matrixType& pMatrix;
 
 
         void run()
@@ -243,13 +243,13 @@ namespace utils
         }
 
     public:
-        explicit ParallelAddMatrix(Eigen::MatrixXd& pM) : pMatrix(pM)
+        explicit ParallelAddMatrix(matrixType& pM) : pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
             compute();
         }
-        ParallelAddMatrix(int left, int right, Eigen::MatrixXd& pM) : pMatrix(pM)
+        ParallelAddMatrix(int left, int right, matrixType& pM) : pMatrix(pM)
         {
             this->left = left;
             this->right = right;
@@ -426,7 +426,7 @@ namespace utils
         int right;
         pointType res;
         pointType& vec;
-        Eigen::MatrixXd& pMatrix;
+        matrixType& pMatrix;
 
 
         void run()
@@ -437,13 +437,13 @@ namespace utils
         }
 
     public:
-        ParallelDistanceCompute(Eigen::MatrixXd& pM, pointType& v) : vec(v), pMatrix(pM)
+        ParallelDistanceCompute(matrixType& pM, pointType& v) : vec(v), pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
             compute();
         }
-        ParallelDistanceCompute(int left, int right, Eigen::MatrixXd& pM, pointType& v) : vec(v), pMatrix(pM)
+        ParallelDistanceCompute(int left, int right, matrixType& pM, pointType& v) : vec(v), pMatrix(pM)
         {
             this->left = left;
             this->right = right;
