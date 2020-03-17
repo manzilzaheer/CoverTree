@@ -215,9 +215,9 @@ public:
     // cover tree using points in the list between begin and end
     CoverTree(std::vector<pointType>& pList, int begin, int end, int truncate = -1);
     // cover tree using points in the list between begin and end
-    CoverTree(MatrixType & pMatrix, int begin, int end, int truncate = -1);
+    CoverTree(matrixType & pMatrix, int begin, int end, int truncate = -1);
     // cover tree using points in the list between begin and end
-    CoverTree(Eigen::Map<MatrixType>& pMatrix, int begin, int end, int truncate = -1);
+    CoverTree(Eigen::Map<matrixType>& pMatrix, int begin, int end, int truncate = -1);
 
     /*** Destructor ***/
     /*** Destructor: deallocating all memories by a post order traversal ***/
@@ -229,10 +229,10 @@ public:
     static CoverTree* from_points(std::vector<pointType>& pList, int truncate = -1, bool use_multi_core = true);
 
     /*** construct cover tree using all points in the matrix in row-major form ***/
-    static CoverTree* from_matrix(MatrixType& pMatrix, int truncate = -1, bool use_multi_core = true);
+    static CoverTree* from_matrix(matrixType& pMatrix, int truncate = -1, bool use_multi_core = true);
 
     /*** construct cover tree using all points in the matrix in row-major form ***/
-    static CoverTree* from_matrix(Eigen::Map<MatrixType>& pMatrix, int truncate = -1, bool use_multi_core = true);
+    static CoverTree* from_matrix(Eigen::Map<matrixType>& pMatrix, int truncate = -1, bool use_multi_core = true);
 
 
     /*** Insert point p into the cover tree ***/
