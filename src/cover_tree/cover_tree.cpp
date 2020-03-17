@@ -756,7 +756,7 @@ CoverTree::CoverTree(std::vector<pointType>& pList, int begin, int end, int trun
 }
 
 // constructor: cover tree using points in the list between begin and end
-CoverTree::CoverTree(MatrixType& pMatrix, int begin, int end, int truncateArg /*= 0*/)
+CoverTree::CoverTree(matrixType& pMatrix, int begin, int end, int truncateArg /*= 0*/)
 {
     //1. Compute the mean of entire data
     pointType mx = utils::ParallelAddMatrix(pMatrix).get_result()/pMatrix.cols();
@@ -809,7 +809,7 @@ CoverTree::CoverTree(MatrixType& pMatrix, int begin, int end, int truncateArg /*
 }
 
 // constructor: cover tree using points in the list between begin and end
-CoverTree::CoverTree(Eigen::Map<MatrixType>& pMatrix, int begin, int end, int truncateArg /*= 0*/)
+CoverTree::CoverTree(Eigen::Map<matrixType>& pMatrix, int begin, int end, int truncateArg /*= 0*/)
 {
     //1. Compute the mean of entire data
     pointType mx = utils::ParallelAddMatrixNP(pMatrix).get_result()/pMatrix.cols();
@@ -868,7 +868,7 @@ CoverTree::CoverTree(Eigen::Map<MatrixType>& pMatrix, int begin, int end, int tr
 }
 
 // constructor: cover tree using points in the list between begin and end
-// CoverTree::CoverTree(Eigen::Map<MatrixType>& pMatrix, int begin, int end, int truncateArg /*= 0*/)
+// CoverTree::CoverTree(Eigen::Map<matrixType>& pMatrix, int begin, int end, int truncateArg /*= 0*/)
 // {
     // pointType temp = pMatrix.col(begin);
 
@@ -937,7 +937,7 @@ CoverTree* CoverTree::from_points(std::vector<pointType>& pList, int truncate /*
 }
 
 // constructor: using matrix in row-major form!
-CoverTree* CoverTree::from_matrix(MatrixType& pMatrix, int truncate /*=-1*/, bool use_multi_core /*=true*/)
+CoverTree* CoverTree::from_matrix(matrixType& pMatrix, int truncate /*=-1*/, bool use_multi_core /*=true*/)
 {
     std::cout << "Faster Cover Tree with base " << CoverTree::base << std::endl;
     CoverTree* cTree = NULL;
@@ -958,7 +958,7 @@ CoverTree* CoverTree::from_matrix(MatrixType& pMatrix, int truncate /*=-1*/, boo
 }
 
 // constructor: using matrix in col-major form!
-CoverTree* CoverTree::from_matrix(Eigen::Map<MatrixType>& pMatrix, int truncate /*=-1*/, bool use_multi_core /*=true*/)
+CoverTree* CoverTree::from_matrix(Eigen::Map<matrixType>& pMatrix, int truncate /*=-1*/, bool use_multi_core /*=true*/)
 {
     std::cout << "Faster Cover Tree with base " << CoverTree::base << std::endl;
     CoverTree* cTree = NULL;
