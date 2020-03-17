@@ -27,12 +27,6 @@
 #include <iostream>
 # include <iomanip>
 
-#ifdef _FLOAT64_VER_
-#define MY_NPY_FLOAT NPY_FLOAT64
-#else
-#define MY_NPY_FLOAT NPY_FLOAT32
-#endif
-
 template<class UnaryFunction>
 UnaryFunction parallel_for_each(size_t first, size_t last, UnaryFunction f)
 {
