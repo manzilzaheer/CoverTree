@@ -19,15 +19,15 @@
 
 #include <numeric>
 
-double* CoverTree::compute_pow_table()
+scalar* CoverTree::compute_pow_table()
 {
-    double* powdict = new double[2048];
+    scalar* powdict = new scalar[2048];
     for (int i = 0; i<2048; ++i)
         powdict[i] = pow(CoverTree::base, i - 1024);
     return powdict;
 }
 
-double* CoverTree::powdict = compute_pow_table();
+scalar* CoverTree::powdict = compute_pow_table();
 
 /******************************* Insert ***********************************************/
 bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
@@ -53,7 +53,7 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
     unsigned num_children = current->children.size();
     std::vector<int> idx(num_children);
     std::iota(std::begin(idx), std::end(idx), 0);
-    std::vector<double> dists(num_children);
+    std::vector<scalar> dists(num_children);
     for (unsigned i = 0; i < num_children; ++i)
         dists[i] = current->children[i]->dist(p);
     auto comp_x = [&dists](int a, int b) { return dists[a] < dists[b]; };
@@ -63,7 +63,7 @@ bool CoverTree::insert(CoverTree::Node* current, const pointType& p)
     for (const auto& child_idx : idx)
     {
         Node* child = current->children[child_idx];
-        double dist_child = dists[child_idx];
+        scalar dist_child = dists[child_idx];
         if (dist_child <= 0.0)
         {
             // release read lock then enter child
@@ -141,7 +141,7 @@ bool CoverTree::insert(CoverTree::Node* current, CoverTree::Node* p)
     unsigned num_children = current->children.size();
     std::vector<int> idx(num_children);
     std::iota(std::begin(idx), std::end(idx), 0);
-    std::vector<double> dists(num_children);
+    std::vector<scalar> dists(num_children);
     for (unsigned i = 0; i < num_children; ++i)
         dists[i] = current->children[i]->dist(p);
     auto comp_x = [&dists](int a, int b) { return dists[a] < dists[b]; };
@@ -151,7 +151,7 @@ bool CoverTree::insert(CoverTree::Node* current, CoverTree::Node* p)
     for (const auto& child_idx : idx)
     {
         Node* child = current->children[child_idx];
-        double dist_child = dists[child_idx];
+        scalar dist_child = dists[child_idx];
         if (dist_child <= 0.0)
         {
             // release read lock then enter child
@@ -267,7 +267,7 @@ bool CoverTree::remove(const pointType &p)
 {
     bool ret_val = false;
     // First find the point
-    std::pair<CoverTree::Node*, double> result(root, root->dist(p));
+    std::pair<CoverTree::Node*, scalar> result(root, root->dist(p));
     NearestNeighbour(root, result.second, p, result);
 
     if (result.second<=0.0)
@@ -311,7 +311,7 @@ bool CoverTree::remove(const pointType &p)
 
 
 /****************************** Nearest Neighbour *************************************/
-void CoverTree::NearestNeighbour(CoverTree::Node* current, double dist_current, const pointType &p, std::pair<CoverTree::Node*, double>& nn) const
+void CoverTree::NearestNeighbour(CoverTree::Node* current, scalar dist_current, const pointType &p, std::pair<CoverTree::Node*, scalar>& nn) const
 {
     // If the current node is the nearest neighbour
     if (dist_current < nn.second)
@@ -324,7 +324,7 @@ void CoverTree::NearestNeighbour(CoverTree::Node* current, double dist_current, 
     unsigned num_children = current->children.size();
     std::vector<int> idx(num_children);
     std::iota(std::begin(idx), std::end(idx), 0);
-    std::vector<double> dists(num_children);
+    std::vector<scalar> dists(num_children);
     //dist_count[current->level].fetch_add(num_children, std::memory_order_relaxed);
     for (unsigned i = 0; i < num_children; ++i)
         dists[i] = current->children[i]->dist(p);
@@ -334,7 +334,7 @@ void CoverTree::NearestNeighbour(CoverTree::Node* current, double dist_current, 
     for (const auto& child_idx : idx)
     {
         Node* child = current->children[child_idx];
-        double dist_child = dists[child_idx];
+        scalar dist_child = dists[child_idx];
         if (child->maxdistUB > current->covdist()/(base-1))
             std::cout << "I am crazy because max upper bound is bigger than 2**i " << child->maxdistUB << " " << current->covdist()/(base-1) << std::endl;
         if (nn.second > dist_child - child->maxdistUB)
@@ -343,24 +343,24 @@ void CoverTree::NearestNeighbour(CoverTree::Node* current, double dist_current, 
 }
 
 // First the number of nearest neighbor
-std::pair<CoverTree::Node*, double> CoverTree::NearestNeighbour(const pointType &p) const
+std::pair<CoverTree::Node*, scalar> CoverTree::NearestNeighbour(const pointType &p) const
 {
-    std::pair<CoverTree::Node*, double> result(root, root->dist(p));
+    std::pair<CoverTree::Node*, scalar> result(root, root->dist(p));
     NearestNeighbour(root, result.second, p, result);
     return result;
 }
 
 /****************************** k-Nearest Neighbours *************************************/
 
-void CoverTree::kNearestNeighbours(CoverTree::Node* current, double dist_current, const pointType& p, std::vector<std::pair<CoverTree::Node*, double>>& nnList) const
+void CoverTree::kNearestNeighbours(CoverTree::Node* current, scalar dist_current, const pointType& p, std::vector<std::pair<CoverTree::Node*, scalar>>& nnList) const
 {
     // TODO(manzilz): An efficient implementation ?
 
     // If the current node is eligible to get into the list
     if(dist_current < nnList.back().second)
     {
-        auto comp_x = [](std::pair<CoverTree::Node*, double> a, std::pair<CoverTree::Node*, double> b) { return a.second < b.second; };
-        std::pair<CoverTree::Node*, double> temp(current, dist_current);
+        auto comp_x = [](std::pair<CoverTree::Node*, scalar> a, std::pair<CoverTree::Node*, scalar> b) { return a.second < b.second; };
+        std::pair<CoverTree::Node*, scalar> temp(current, dist_current);
         nnList.insert(
             std::upper_bound( nnList.begin(), nnList.end(), temp, comp_x ),
             temp
@@ -372,7 +372,7 @@ void CoverTree::kNearestNeighbours(CoverTree::Node* current, double dist_current
     unsigned num_children = current->children.size();
     std::vector<int> idx(num_children);
     std::iota(std::begin(idx), std::end(idx), 0);
-    std::vector<double> dists(num_children);
+    std::vector<scalar> dists(num_children);
     for (unsigned i = 0; i < num_children; ++i)
         dists[i] = current->children[i]->dist(p);
     auto comp_x = [&dists](int a, int b) { return dists[a] < dists[b]; };
@@ -381,21 +381,21 @@ void CoverTree::kNearestNeighbours(CoverTree::Node* current, double dist_current
     for (const auto& child_idx : idx)
     {
         Node* child = current->children[child_idx];
-        double dist_child = dists[child_idx];
+        scalar dist_child = dists[child_idx];
         if ( nnList.back().second > dist_child - child->maxdistUB)
             kNearestNeighbours(child, dist_child, p, nnList);
     }
 }
 
-std::vector<std::pair<CoverTree::Node*, double>> CoverTree::kNearestNeighbours(const pointType &queryPt, unsigned numNbrs) const
+std::vector<std::pair<CoverTree::Node*, scalar>> CoverTree::kNearestNeighbours(const pointType &queryPt, unsigned numNbrs) const
 {
     // Do the worst initialization
-    std::pair<CoverTree::Node*, double> dummy(new CoverTree::Node(), std::numeric_limits<double>::max());
+    std::pair<CoverTree::Node*, scalar> dummy(new CoverTree::Node(), std::numeric_limits<scalar>::max());
     // List of k-nearest points till now
-    std::vector<std::pair<CoverTree::Node*, double>> nnList(numNbrs, dummy);
+    std::vector<std::pair<CoverTree::Node*, scalar>> nnList(numNbrs, dummy);
 
     // Call with root
-    double dist_root = root->dist(queryPt);
+    scalar dist_root = root->dist(queryPt);
     kNearestNeighbours(root, dist_root, queryPt, nnList);
 
     return nnList;
@@ -403,12 +403,12 @@ std::vector<std::pair<CoverTree::Node*, double>> CoverTree::kNearestNeighbours(c
 
 /****************************** Range Neighbours Search *************************************/
 
-void CoverTree::rangeNeighbours(CoverTree::Node* current, double dist_current, const pointType &p, double range, std::vector<std::pair<CoverTree::Node*, double>>& nnList) const
+void CoverTree::rangeNeighbours(CoverTree::Node* current, scalar dist_current, const pointType &p, scalar range, std::vector<std::pair<CoverTree::Node*, scalar>>& nnList) const
 {
     // If the current node is eligible to get into the list
     if (dist_current < range)
     {
-        std::pair<CoverTree::Node*, double> temp(current, dist_current);
+        std::pair<CoverTree::Node*, scalar> temp(current, dist_current);
         nnList.push_back(temp);
     }
 
@@ -416,7 +416,7 @@ void CoverTree::rangeNeighbours(CoverTree::Node* current, double dist_current, c
     unsigned num_children = current->children.size();
     std::vector<int> idx(num_children);
     std::iota(std::begin(idx), std::end(idx), 0);
-    std::vector<double> dists(num_children);
+    std::vector<scalar> dists(num_children);
     for (unsigned i = 0; i < num_children; ++i)
         dists[i] = current->children[i]->dist(p);
     auto comp_x = [&dists](int a, int b) { return dists[a] < dists[b]; };
@@ -425,19 +425,19 @@ void CoverTree::rangeNeighbours(CoverTree::Node* current, double dist_current, c
     for (const auto& child_idx : idx)
     {
         Node* child = current->children[child_idx];
-        double dist_child = dists[child_idx];
+        scalar dist_child = dists[child_idx];
         if (range > dist_child - child->maxdistUB)
             rangeNeighbours(child, dist_child, p, range, nnList);
     }
 }
 
-std::vector<std::pair<CoverTree::Node*, double>> CoverTree::rangeNeighbours(const pointType &queryPt, double range) const
+std::vector<std::pair<CoverTree::Node*, scalar>> CoverTree::rangeNeighbours(const pointType &queryPt, scalar range) const
 {
     // List of nearest neighbors in the range
-    std::vector<std::pair<CoverTree::Node*, double>> nnList;
+    std::vector<std::pair<CoverTree::Node*, scalar>> nnList;
 
     // Call with root
-    double dist_root = root->dist(queryPt);
+    scalar dist_root = root->dist(queryPt);
     rangeNeighbours(root, dist_root, queryPt, range, nnList);
 
     return nnList;
@@ -756,7 +756,7 @@ CoverTree::CoverTree(std::vector<pointType>& pList, int begin, int end, int trun
 }
 
 // constructor: cover tree using points in the list between begin and end
-CoverTree::CoverTree(Eigen::MatrixXd& pMatrix, int begin, int end, int truncateArg /*= 0*/)
+CoverTree::CoverTree(MatrixType& pMatrix, int begin, int end, int truncateArg /*= 0*/)
 {
     //1. Compute the mean of entire data
     pointType mx = utils::ParallelAddMatrix(pMatrix).get_result()/pMatrix.cols();
@@ -809,7 +809,7 @@ CoverTree::CoverTree(Eigen::MatrixXd& pMatrix, int begin, int end, int truncateA
 }
 
 // constructor: cover tree using points in the list between begin and end
-CoverTree::CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, int truncateArg /*= 0*/)
+CoverTree::CoverTree(Eigen::Map<MatrixType>& pMatrix, int begin, int end, int truncateArg /*= 0*/)
 {
     //1. Compute the mean of entire data
     pointType mx = utils::ParallelAddMatrixNP(pMatrix).get_result()/pMatrix.cols();
@@ -868,7 +868,7 @@ CoverTree::CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, i
 }
 
 // constructor: cover tree using points in the list between begin and end
-// CoverTree::CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, int truncateArg /*= 0*/)
+// CoverTree::CoverTree(Eigen::Map<MatrixType>& pMatrix, int begin, int end, int truncateArg /*= 0*/)
 // {
     // pointType temp = pMatrix.col(begin);
 
@@ -937,7 +937,7 @@ CoverTree* CoverTree::from_points(std::vector<pointType>& pList, int truncate /*
 }
 
 // constructor: using matrix in row-major form!
-CoverTree* CoverTree::from_matrix(Eigen::MatrixXd& pMatrix, int truncate /*=-1*/, bool use_multi_core /*=true*/)
+CoverTree* CoverTree::from_matrix(MatrixType& pMatrix, int truncate /*=-1*/, bool use_multi_core /*=true*/)
 {
     std::cout << "Faster Cover Tree with base " << CoverTree::base << std::endl;
     CoverTree* cTree = NULL;
@@ -958,7 +958,7 @@ CoverTree* CoverTree::from_matrix(Eigen::MatrixXd& pMatrix, int truncate /*=-1*/
 }
 
 // constructor: using matrix in col-major form!
-CoverTree* CoverTree::from_matrix(Eigen::Map<Eigen::MatrixXd>& pMatrix, int truncate /*=-1*/, bool use_multi_core /*=true*/)
+CoverTree* CoverTree::from_matrix(Eigen::Map<MatrixType>& pMatrix, int truncate /*=-1*/, bool use_multi_core /*=true*/)
 {
     std::cout << "Faster Cover Tree with base " << CoverTree::base << std::endl;
     CoverTree* cTree = NULL;
