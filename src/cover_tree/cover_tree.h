@@ -37,11 +37,13 @@
 
 #ifdef _FLOAT64_VER_
 #define MY_NPY_FLOAT NPY_FLOAT64
+typedef double basicScalar;
 typedef Eigen::MatrixXd matrixType;
 typedef Eigen::VectorXd pointType;
 typedef Eigen::VectorXd::Scalar scalar;
 #else
 #define MY_NPY_FLOAT NPY_FLOAT32
+typedef float basicScalar;
 typedef Eigen::MatrixXf matrixType;
 typedef Eigen::VectorXf pointType;
 typedef Eigen::VectorXf::Scalar scalar;
