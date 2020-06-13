@@ -167,25 +167,25 @@ namespace utils
     {
         int left;
         int right;
-        Eigen::VectorXd res;
-        std::vector<Eigen::VectorXd>& pList;
+        pointType res;
+        std::vector<pointType>& pList;
 
 
         void run()
         {
-            res = Eigen::VectorXd::Zero(pList[0].size());
+            res = pointType::Zero(pList[0].size());
             for(int i = left; i<right; ++i)
                 res += pList[i];
         }
 
     public:
-        explicit ParallelAddList(std::vector<Eigen::VectorXd>& pL) : pList(pL)
+        explicit ParallelAddList(std::vector<pointType>& pL) : pList(pL)
         {
             this->left = 0;
             this->right = pL.size();
             compute();
         }
-        ParallelAddList(int left, int right, std::vector<Eigen::VectorXd>& pL) : pList(pL)
+        ParallelAddList(int left, int right, std::vector<pointType>& pL) : pList(pL)
         {
             this->left = left;
             this->right = right;
@@ -221,7 +221,7 @@ namespace utils
             return 0;
         }
 
-        Eigen::VectorXd get_result()
+        pointType get_result()
         {
             return res;
         }
@@ -231,25 +231,25 @@ namespace utils
     {
         int left;
         int right;
-        Eigen::VectorXd res;
-        Eigen::MatrixXd& pMatrix;
+        pointType res;
+        matrixType& pMatrix;
 
 
         void run()
         {
-            res = Eigen::VectorXd::Zero(pMatrix.rows());
+            res = pointType::Zero(pMatrix.rows());
             for(int i = left; i<right; ++i)
                 res += pMatrix.col(i);
         }
 
     public:
-        explicit ParallelAddMatrix(Eigen::MatrixXd& pM) : pMatrix(pM)
+        explicit ParallelAddMatrix(matrixType& pM) : pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
             compute();
         }
-        ParallelAddMatrix(int left, int right, Eigen::MatrixXd& pM) : pMatrix(pM)
+        ParallelAddMatrix(int left, int right, matrixType& pM) : pMatrix(pM)
         {
             this->left = left;
             this->right = right;
@@ -285,7 +285,7 @@ namespace utils
             return 0;
         }
 
-        Eigen::VectorXd get_result()
+        pointType get_result()
         {
             return res;
         }
@@ -295,25 +295,25 @@ namespace utils
     {
         int left;
         int right;
-        Eigen::VectorXd res;
-        Eigen::Map<Eigen::MatrixXd>& pMatrix;
+        pointType res;
+        Eigen::Map<matrixType>& pMatrix;
 
 
         void run()
         {
-            res = Eigen::VectorXd::Zero(pMatrix.rows());
+            res = pointType::Zero(pMatrix.rows());
             for(int i = left; i<right; ++i)
                 res += pMatrix.col(i);
         }
 
     public:
-        explicit ParallelAddMatrixNP(Eigen::Map<Eigen::MatrixXd>& pM) : pMatrix(pM)
+        explicit ParallelAddMatrixNP(Eigen::Map<matrixType>& pM) : pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
             compute();
         }
-        ParallelAddMatrixNP(int left, int right, Eigen::Map<Eigen::MatrixXd>& pM) : pMatrix(pM)
+        ParallelAddMatrixNP(int left, int right, Eigen::Map<matrixType>& pM) : pMatrix(pM)
         {
             this->left = left;
             this->right = right;
@@ -349,7 +349,7 @@ namespace utils
             return 0;
         }
 
-        Eigen::VectorXd get_result()
+        pointType get_result()
         {
             return res;
         }
@@ -359,26 +359,26 @@ namespace utils
     {
         int left;
         int right;
-        Eigen::VectorXd res;
-        Eigen::VectorXd& vec;
-        std::vector<Eigen::VectorXd>& pList;
+        pointType res;
+        pointType& vec;
+        std::vector<pointType>& pList;
 
 
         void run()
         {
-            res = Eigen::VectorXd::Zero(pList.size());
+            res = pointType::Zero(pList.size());
             for(int i = left; i<right; ++i)
                 res[i] = (pList[i]-vec).norm();
         }
 
     public:
-        ParallelDistanceComputeList(std::vector<Eigen::VectorXd>& pL, Eigen::VectorXd& v) : vec(v), pList(pL)
+        ParallelDistanceComputeList(std::vector<pointType>& pL, pointType& v) : vec(v), pList(pL)
         {
             this->left = 0;
             this->right = pL.size();
             compute();
         }
-        ParallelDistanceComputeList(int left, int right, std::vector<Eigen::VectorXd>& pL, Eigen::VectorXd& v) : vec(v), pList(pL)
+        ParallelDistanceComputeList(int left, int right, std::vector<pointType>& pL, pointType& v) : vec(v), pList(pL)
         {
             this->left = left;
             this->right = right;
@@ -414,7 +414,7 @@ namespace utils
             return 0;
         }
 
-        Eigen::VectorXd get_result()
+        pointType get_result()
         {
             return res;
         }
@@ -424,26 +424,26 @@ namespace utils
     {
         int left;
         int right;
-        Eigen::VectorXd res;
-        Eigen::VectorXd& vec;
-        Eigen::MatrixXd& pMatrix;
+        pointType res;
+        pointType& vec;
+        matrixType& pMatrix;
 
 
         void run()
         {
-            res = Eigen::VectorXd::Zero(pMatrix.cols());
+            res = pointType::Zero(pMatrix.cols());
             for(int i = left; i<right; ++i)
                 res[i] = (pMatrix.col(i)-vec).norm();
         }
 
     public:
-        ParallelDistanceCompute(Eigen::MatrixXd& pM, Eigen::VectorXd& v) : vec(v), pMatrix(pM)
+        ParallelDistanceCompute(matrixType& pM, pointType& v) : vec(v), pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
             compute();
         }
-        ParallelDistanceCompute(int left, int right, Eigen::MatrixXd& pM, Eigen::VectorXd& v) : vec(v), pMatrix(pM)
+        ParallelDistanceCompute(int left, int right, matrixType& pM, pointType& v) : vec(v), pMatrix(pM)
         {
             this->left = left;
             this->right = right;
@@ -479,7 +479,7 @@ namespace utils
             return 0;
         }
 
-        Eigen::VectorXd get_result()
+        pointType get_result()
         {
             return res;
         }
@@ -489,26 +489,26 @@ namespace utils
     {
         int left;
         int right;
-        Eigen::VectorXd res;
-        Eigen::VectorXd& vec;
-        Eigen::Map<Eigen::MatrixXd>& pMatrix;
+        pointType res;
+        pointType& vec;
+        Eigen::Map<matrixType>& pMatrix;
 
 
         void run()
         {
-            res = Eigen::VectorXd::Zero(pMatrix.cols());
+            res = pointType::Zero(pMatrix.cols());
             for(int i = left; i<right; ++i)
                 res[i] = (pMatrix.col(i)-vec).norm();
         }
 
     public:
-        ParallelDistanceComputeNP(Eigen::Map<Eigen::MatrixXd>& pM, Eigen::VectorXd& v) : vec(v), pMatrix(pM)
+        ParallelDistanceComputeNP(Eigen::Map<matrixType>& pM, pointType& v) : vec(v), pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
             compute();
         }
-        ParallelDistanceComputeNP(int left, int right, Eigen::Map<Eigen::MatrixXd>& pM, Eigen::VectorXd& v) : vec(v), pMatrix(pM)
+        ParallelDistanceComputeNP(int left, int right, Eigen::Map<matrixType>& pM, pointType& v) : vec(v), pMatrix(pM)
         {
             this->left = left;
             this->right = right;
@@ -544,7 +544,7 @@ namespace utils
             return 0;
         }
 
-        Eigen::VectorXd get_result()
+        pointType get_result()
         {
             return res;
         }

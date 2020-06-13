@@ -34,17 +34,27 @@
 #endif
 
 #include <Eigen/Core>
+
+#ifdef _FLOAT64_VER_
+#define MY_NPY_FLOAT NPY_FLOAT64
+typedef Eigen::MatrixXd matrixType;
 typedef Eigen::VectorXd pointType;
-//typedef pointType::Scalar dtype;
+typedef Eigen::VectorXd::Scalar scalar;
+#else
+#define MY_NPY_FLOAT NPY_FLOAT32
+typedef Eigen::MatrixXf matrixType;
+typedef Eigen::VectorXf pointType;
+typedef Eigen::VectorXf::Scalar scalar;
+#endif
 
 class CoverTree
 {
 /************************* Internal Functions ***********************************************/
 protected:
     /*** Base to use for the calculations ***/
-    static constexpr double base = 1.3;
-    static double* compute_pow_table();
-    static double* powdict;
+    static constexpr scalar base = 1.3;
+    static scalar* compute_pow_table();
+    static scalar* powdict;
 
 public:
     /*** structure for each node ***/
@@ -53,26 +63,26 @@ public:
         pointType _p;                       // point associated with the node
         std::vector<Node*> children;        // list of children
         int level;                          // current level of the node
-        double maxdistUB;                   // upper bound of distance to any of descendants
+        scalar maxdistUB;                   // upper bound of distance to any of descendants
         unsigned ID;                        // unique ID of current node
         Node* parent;                       // parent of current node
 
         mutable std::SHARED_MUTEX_TYPE mut;// lock for current node
 
         /*** Node modifiers ***/
-        double covdist()                    // covering distance of subtree at current node
+        scalar covdist()                    // covering distance of subtree at current node
         {
             return powdict[level + 1024];
         }
-        double sepdist()                    // separating distance between nodes at current level
+        scalar sepdist()                    // separating distance between nodes at current level
         {
             return powdict[level + 1023];
         }
-        double dist(const pointType& pp) const  // L2 distance between current node and point pp
+        scalar dist(const pointType& pp) const  // L2 distance between current node and point pp
         {
             return (_p - pp).norm();
         }
-        double dist(Node* n) const              // L2 distance between current node and node n
+        scalar dist(Node* n) const              // L2 distance between current node and node n
         {
             return (_p - n->_p).norm();
         }
@@ -177,13 +187,13 @@ protected:
     bool insert(Node* current, Node* p);
 
     /*** Nearest Neighbour search ***/
-    void NearestNeighbour(Node* current, double dist_current, const pointType &p, std::pair<CoverTree::Node*, double>& nn) const;
+    void NearestNeighbour(Node* current, scalar dist_current, const pointType &p, std::pair<CoverTree::Node*, scalar>& nn) const;
 
     /*** k-Nearest Neighbour search ***/
-    void kNearestNeighbours(Node* current, double dist_current, const pointType& p, std::vector<std::pair<CoverTree::Node*, double>>& nnList) const;
+    void kNearestNeighbours(Node* current, scalar dist_current, const pointType& p, std::vector<std::pair<CoverTree::Node*, scalar>>& nnList) const;
 
     /*** Range search ***/
-    void rangeNeighbours(Node* current, double dist_current, const pointType &p, double range, std::vector<std::pair<CoverTree::Node*, double>>& nnList) const;
+    void rangeNeighbours(Node* current, scalar dist_current, const pointType &p, scalar range, std::vector<std::pair<CoverTree::Node*, scalar>>& nnList) const;
 
     /*** Serialize/Desrialize helper function ***/
     char* preorder_pack(char* buff, Node* current) const;       // Pre-order traversal
@@ -205,9 +215,9 @@ public:
     // cover tree using points in the list between begin and end
     CoverTree(std::vector<pointType>& pList, int begin, int end, int truncate = -1);
     // cover tree using points in the list between begin and end
-    CoverTree(Eigen::MatrixXd& pMatrix, int begin, int end, int truncate = -1);
+    CoverTree(matrixType & pMatrix, int begin, int end, int truncate = -1);
     // cover tree using points in the list between begin and end
-    CoverTree(Eigen::Map<Eigen::MatrixXd>& pMatrix, int begin, int end, int truncate = -1);
+    CoverTree(Eigen::Map<matrixType>& pMatrix, int begin, int end, int truncate = -1);
 
     /*** Destructor ***/
     /*** Destructor: deallocating all memories by a post order traversal ***/
@@ -219,10 +229,10 @@ public:
     static CoverTree* from_points(std::vector<pointType>& pList, int truncate = -1, bool use_multi_core = true);
 
     /*** construct cover tree using all points in the matrix in row-major form ***/
-    static CoverTree* from_matrix(Eigen::MatrixXd& pMatrix, int truncate = -1, bool use_multi_core = true);
+    static CoverTree* from_matrix(matrixType& pMatrix, int truncate = -1, bool use_multi_core = true);
 
     /*** construct cover tree using all points in the matrix in row-major form ***/
-    static CoverTree* from_matrix(Eigen::Map<Eigen::MatrixXd>& pMatrix, int truncate = -1, bool use_multi_core = true);
+    static CoverTree* from_matrix(Eigen::Map<matrixType>& pMatrix, int truncate = -1, bool use_multi_core = true);
 
 
     /*** Insert point p into the cover tree ***/
@@ -232,13 +242,13 @@ public:
     bool remove(const pointType& p);
 
     /*** Nearest Neighbour search ***/
-    std::pair<CoverTree::Node*, double> NearestNeighbour(const pointType &p) const;
+    std::pair<CoverTree::Node*, scalar> NearestNeighbour(const pointType &p) const;
 
     /*** k-Nearest Neighbour search ***/
-    std::vector<std::pair<CoverTree::Node*, double>> kNearestNeighbours(const pointType &p, unsigned k = 10) const;
+    std::vector<std::pair<CoverTree::Node*, scalar>> kNearestNeighbours(const pointType &p, unsigned k = 10) const;
 
     /*** Range search ***/
-    std::vector<std::pair<CoverTree::Node*, double>> rangeNeighbours(const pointType &queryPt, double range = 1.0) const;
+    std::vector<std::pair<CoverTree::Node*, scalar>> rangeNeighbours(const pointType &queryPt, scalar range = 1.0) const;
 
     /*** Serialize/Desrialize: useful for MPI ***/
     char* serialize() const;                                    // Serialize to a buffer

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cover_tree.h"
+#include "sgtree.h"
 #include "utils.h"
 
 #include <numeric>
