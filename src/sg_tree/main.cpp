@@ -27,7 +27,7 @@
 #define EIGEN_DONT_PARALLELIZE
 
 // User header
-# include "cover_tree.h"
+# include "sgtree.h"
 # include "utils.h"
 
 

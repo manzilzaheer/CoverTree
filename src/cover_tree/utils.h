@@ -296,7 +296,7 @@ namespace utils
         int left;
         int right;
         pointType res;
-        Eigen::Map<matrixType& pMatrix;
+        Eigen::Map<matrixType>& pMatrix;
 
 
         void run()
@@ -307,13 +307,13 @@ namespace utils
         }
 
     public:
-        explicit ParallelAddMatrixNP(Eigen::Map<matrixType& pM) : pMatrix(pM)
+        explicit ParallelAddMatrixNP(Eigen::Map<matrixType>& pM) : pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
             compute();
         }
-        ParallelAddMatrixNP(int left, int right, Eigen::Map<matrixType& pM) : pMatrix(pM)
+        ParallelAddMatrixNP(int left, int right, Eigen::Map<matrixType>& pM) : pMatrix(pM)
         {
             this->left = left;
             this->right = right;
@@ -491,7 +491,7 @@ namespace utils
         int right;
         pointType res;
         pointType& vec;
-        Eigen::Map<matrixType& pMatrix;
+        Eigen::Map<matrixType>& pMatrix;
 
 
         void run()
@@ -502,13 +502,13 @@ namespace utils
         }
 
     public:
-        ParallelDistanceComputeNP(Eigen::Map<matrixType& pM, pointType& v) : vec(v), pMatrix(pM)
+        ParallelDistanceComputeNP(Eigen::Map<matrixType>& pM, pointType& v) : vec(v), pMatrix(pM)
         {
             this->left = 0;
             this->right = pM.cols();
             compute();
         }
-        ParallelDistanceComputeNP(int left, int right, Eigen::Map<matrixType& pM, pointType& v) : vec(v), pMatrix(pM)
+        ParallelDistanceComputeNP(int left, int right, Eigen::Map<matrixType>& pM, pointType& v) : vec(v), pMatrix(pM)
         {
             this->left = left;
             this->right = right;
