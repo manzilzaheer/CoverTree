@@ -120,7 +120,7 @@ static PyObject *new_covertreec(PyObject *self, PyObject *args)
   long numDims = PyArray_DIM(in_array, 1);
   //std::cout<<numPoints<<", "<<numDims<<std::endl;
   long idx[2] = {0, 0};
-  basicScalar * fnp = reinterpret_cast< basicScalar * >( PyArray_GetPtr(in_array, idx) );
+  scalar * fnp = reinterpret_cast< scalar * >( PyArray_GetPtr(in_array, idx) );
   Eigen::Map<matrixType> pointMatrix(fnp, numDims, numPoints);
 
   CoverTree* cTree = CoverTree::from_matrix(pointMatrix, -1, false);
@@ -158,7 +158,7 @@ static PyObject *covertreec_insert(PyObject *self, PyObject *args) {
   long *idx = new long[d];
   for(int i=0; i<d; ++i)
     idx[i] = 0;
-  basicScalar * fnp = reinterpret_cast< basicScalar * >( PyArray_GetPtr(in_array, idx) );
+  scalar * fnp = reinterpret_cast< scalar * >( PyArray_GetPtr(in_array, idx) );
   Eigen::Map<pointType> value(fnp, PyArray_SIZE(in_array));
 
   obj = reinterpret_cast< CoverTree * >(int_ptr);
@@ -181,7 +181,7 @@ static PyObject *covertreec_remove(PyObject *self, PyObject *args) {
   long *idx = new long[d];
   for(int i=0; i<d; ++i)
     idx[i] = 0;
-  basicScalar * fnp = reinterpret_cast< basicScalar * >( PyArray_GetPtr(in_array, idx) );
+  scalar * fnp = reinterpret_cast< scalar * >( PyArray_GetPtr(in_array, idx) );
   Eigen::Map<pointType> value(fnp, PyArray_SIZE(in_array));
 
   obj = reinterpret_cast< CoverTree * >(int_ptr);
@@ -207,17 +207,17 @@ static PyObject *covertreec_nn(PyObject *self, PyObject *args) {
   long numPoints = PyArray_DIM(in_array, 0);
   long numDims = PyArray_DIM(in_array, 1);
   //std::cout<<numPoints<<", "<<numDims<<std::endl;
-  basicScalar * fnp = reinterpret_cast< basicScalar * >( PyArray_GetPtr(in_array, idx) );
+  scalar * fnp = reinterpret_cast< scalar * >( PyArray_GetPtr(in_array, idx) );
   Eigen::Map<matrixType> queryPts(fnp, numDims, numPoints);
 
   obj = reinterpret_cast< CoverTree * >(int_ptr);
 
   //obj->dist_count.clear();
 
-  basicScalar *results = new basicScalar[numDims*numPoints];
+  scalar *results = new scalar[numDims*numPoints];
   parallel_for_progressbar(0L, numPoints, [&](long i)->void{
-    std::pair<CoverTree::Node*, basicScalar> ct_nn = obj->NearestNeighbour(queryPts.col(i));
-    basicScalar *data = ct_nn.first->_p.data();
+    std::pair<CoverTree::Node*, scalar> ct_nn = obj->NearestNeighbour(queryPts.col(i));
+    scalar *data = ct_nn.first->_p.data();
     long offset = i*numDims;
     for(long j=0; j<numDims; ++j)
       results[offset++] = data[j];
@@ -255,23 +255,23 @@ static PyObject *covertreec_knn(PyObject *self, PyObject *args) {
   long idx[2] = {0,0};
   long numPoints = PyArray_DIM(in_array, 0);
   long numDims = PyArray_DIM(in_array, 1);
-  basicScalar * fnp = reinterpret_cast< basicScalar * >( PyArray_GetPtr(in_array, idx) );
+  scalar * fnp = reinterpret_cast< scalar * >( PyArray_GetPtr(in_array, idx) );
   Eigen::Map<matrixType> queryPts(fnp, numDims, numPoints);
 
   obj = reinterpret_cast< CoverTree * >(int_ptr);
 
-  basicScalar *results = new basicScalar[k*numDims*numPoints];
+  scalar *results = new scalar[k*numDims*numPoints];
   parallel_for_progressbar(0L, numPoints, [&](long i)->void{
-    std::vector<std::pair<CoverTree::Node*, basicScalar>> ct_nn = obj->kNearestNeighbours(queryPts.col(i), k);
+    std::vector<std::pair<CoverTree::Node*, scalar>> ct_nn = obj->kNearestNeighbours(queryPts.col(i), k);
     long offset = k*numDims*i;
     for(long t=0; t<k; ++t)
     {
-      basicScalar *data = ct_nn[t].first->_p.data();
+      scalar *data = ct_nn[t].first->_p.data();
       for(long j=0; j<numDims; ++j)
         results[offset++] = data[j];
     }
   });
-  //std::pair<CoverTree::Node*, basicScalar> cnn = obj->NearestNeighbour(value);
+  //std::pair<CoverTree::Node*, scalar> cnn = obj->NearestNeighbour(value);
 
   // std::cout << cnn.first->_p << std::endl;
   //Py_RETURN_NONE;
