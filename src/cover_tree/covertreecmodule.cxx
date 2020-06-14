@@ -222,7 +222,7 @@ static PyObject *covertreec_contain(PyObject *self, PyObject *args) {
         std::vector<CoverTree::Node*> ct_nn = obj->ContainingNodes(queryPts.col(i));
         unsigned * containing = new unsigned[ct_nn.size()];
         for (size_t j=0; j < ct_nn.size(); j++) {
-            containing[j] = ct_nn(j)->ID;
+            containing[j] = ct_nn[j]->ID;
         }
         results[i] = containing;
         result_sizes[i] = ct_nn.size();
