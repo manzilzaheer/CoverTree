@@ -378,6 +378,7 @@ PyMODINIT_FUNC PyInit_covertreec(void)
   static PyMethodDef CovertreecMethods[] = {
     {"new", new_covertreec, METH_VARARGS, "Initialize a new Cover Tree."},
     {"delete", delete_covertreec, METH_VARARGS, "Delete the Cover Tree."},
+    {"nodes_containing", covertreec_contain, METH_VARARGS, "Get containing nodes of a point to the Cover Tree."},
     {"insert", covertreec_insert, METH_VARARGS, "Insert a point to the Cover Tree."},
     {"remove", covertreec_remove, METH_VARARGS, "Remove a point from the Cover Tree."},
     {"NearestNeighbour", covertreec_nn, METH_VARARGS, "Find the nearest neighbour."},
