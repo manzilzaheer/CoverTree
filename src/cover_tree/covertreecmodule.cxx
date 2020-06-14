@@ -193,6 +193,63 @@ static PyObject *covertreec_remove(PyObject *self, PyObject *args) {
   Py_RETURN_FALSE;
 }
 
+
+static PyObject *covertreec_contain(PyObject *self, PyObject *args) {
+
+    CoverTree *obj;
+    size_t int_ptr;
+    PyArrayObject *in_array;
+
+    /*  parse the input, from python int to c++ int */
+    if (!PyArg_ParseTuple(args, "kO!:covertreec_contain", &int_ptr, &PyArray_Type, &in_array))
+        return NULL;
+
+    long idx[2] = {0,0};
+    long numPoints = PyArray_DIM(in_array, 0);
+    long numDims = PyArray_DIM(in_array, 1);
+    //std::cout<<numPoints<<", "<<numDims<<std::endl;
+    scalar * fnp = reinterpret_cast< scalar * >( PyArray_GetPtr(in_array, idx) );
+    Eigen::Map<matrixType> queryPts(fnp, numDims, numPoints);
+
+    obj = reinterpret_cast< CoverTree * >(int_ptr);
+
+    //obj->dist_count.clear();
+
+    unsigned ** results = new unsigned*[numPoints];
+    unsigned * result_sizes = new unsigned[numPoints];
+
+    parallel_for_progressbar(0L, numPoints, [&](long i)->void{
+        std::vector<CoverTree::Node*> ct_nn = obj->ContainingNodes(queryPts.col(i));
+        unsigned * containing = new unsigned[ct_nn.size()];
+        for (size_t j=0; j < ct_nn.size(); j++) {
+            containing[j] = ct_nn(j)->ID;
+        }
+        results[i] = containing;
+        result_sizes[i] = ct_nn.size();
+    });
+    unsigned max_containing = 0;
+    for (size_t i=0; i < numPoints; i++) {
+        if (result_sizes[i] > max_containing) {
+            max_containing = result_sizes[i];
+        }
+    }
+    int32_t *resultspad = new int32_t[numPoints*max_containing];
+    for (size_t i=0; i < numPoints; i++) {
+        for (size_t j=0; j < result_sizes[i]; j++) {
+            resultspad[i*max_containing + j] = results[i][j];
+        }
+        for (size_t j=result_sizes[i]; j < max_containing; j++) {
+            resultspad[i*max_containing + j] = -1;
+        }
+    }
+
+    long dims[2] = {numPoints, max_containing};
+    PyObject *out_array = PyArray_SimpleNewFromData(2, dims, NPY_INT32, resultspad);
+
+    Py_INCREF(out_array);
+    return out_array;
+}
+
 static PyObject *covertreec_nn(PyObject *self, PyObject *args) {
 
   CoverTree *obj;

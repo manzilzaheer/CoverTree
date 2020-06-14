@@ -310,6 +310,48 @@ bool CoverTree::remove(const pointType &p)
 }
 
 
+/****************************** Containing Nodes *************************************/
+std::vector<CoverTree::Node *> CoverTree::ContainingNodes(const pointType &p) const {
+    return CoverTree::ContainingNodes(root, p);
+}
+
+std::vector<CoverTree::Node *> CoverTree::ContainingNodes(CoverTree::Node* current, const pointType &p) const
+{
+    std::vector<CoverTree::Node *> res;
+
+    std::queue<CoverTree::Node *> frontier;
+
+    frontier.push(&current);
+
+    while (!frontier.empty()) {
+        CoverTree::Node * n = frontier.pop();
+        unsigned num_children = n->children.size();
+        std::vector<int> idx(num_children);
+        std::iota(std::begin(idx), std::end(idx), 0);
+        std::vector<scalar> dists(num_children);
+        //dist_count[current->level].fetch_add(num_children, std::memory_order_relaxed);
+        for (unsigned i = 0; i < num_children; ++i)
+            dists[i] = current->children[i]->dist(p);
+//        auto comp_x = [&dists](int a, int b) { return dists[a] < dists[b]; };
+//        std::sort(std::begin(idx), std::end(idx), comp_x);
+
+        for (const auto& child_idx : idx)
+        {
+            Node* child = n->children[child_idx];
+            scalar dist_child = dists[child_idx];
+            if (child->maxdistUB > n->covdist()/(base-1))
+                std::cout << "I am crazy because max upper bound is bigger than 2**i " << child->maxdistUB << " " << current->covdist()/(base-1) << std::endl;
+            if (dist_child < child->maxdistUB) {
+                res.push_back(child);
+                frontier.push(child);
+            }
+        }
+
+    }
+    return res;
+}
+
+
 /****************************** Nearest Neighbour *************************************/
 void CoverTree::NearestNeighbour(CoverTree::Node* current, scalar dist_current, const pointType &p, std::pair<CoverTree::Node*, scalar>& nn) const
 {
