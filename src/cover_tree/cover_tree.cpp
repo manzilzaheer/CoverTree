@@ -18,6 +18,7 @@
 #include "utils.h"
 
 #include <numeric>
+#include <queue>
 
 scalar* CoverTree::compute_pow_table()
 {
