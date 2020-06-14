@@ -228,17 +228,17 @@ static PyObject *covertreec_contain(PyObject *self, PyObject *args) {
         result_sizes[i] = ct_nn.size();
     });
     unsigned max_containing = 0;
-    for (size_t i=0; i < numPoints; i++) {
+    for (long i=0; i < numPoints; i++) {
         if (result_sizes[i] > max_containing) {
             max_containing = result_sizes[i];
         }
     }
     int32_t *resultspad = new int32_t[numPoints*max_containing];
-    for (size_t i=0; i < numPoints; i++) {
-        for (size_t j=0; j < result_sizes[i]; j++) {
+    for (long i=0; i < numPoints; i++) {
+        for (long j=0; j < result_sizes[i]; j++) {
             resultspad[i*max_containing + j] = results[i][j];
         }
-        for (size_t j=result_sizes[i]; j < max_containing; j++) {
+        for (long j=result_sizes[i]; j < max_containing; j++) {
             resultspad[i*max_containing + j] = -1;
         }
     }
