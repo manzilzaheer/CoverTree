@@ -334,7 +334,7 @@ std::vector<CoverTree::Node *> CoverTree::ContainingNodes(CoverTree::Node* curre
         std::vector<scalar> dists(num_children);
         //dist_count[current->level].fetch_add(num_children, std::memory_order_relaxed);
         for (unsigned i = 0; i < num_children; ++i)
-            dists[i] = current->children[i]->dist(p);
+            dists[i] = n->children[i]->dist(p);
 //        auto comp_x = [&dists](int a, int b) { return dists[a] < dists[b]; };
 //        std::sort(std::begin(idx), std::end(idx), comp_x);
 
@@ -343,7 +343,7 @@ std::vector<CoverTree::Node *> CoverTree::ContainingNodes(CoverTree::Node* curre
             Node* child = n->children[child_idx];
             scalar dist_child = dists[child_idx];
             if (child->maxdistUB > n->covdist()/(base-1))
-                std::cout << "I am crazy because max upper bound is bigger than 2**i " << child->maxdistUB << " " << current->covdist()/(base-1) << std::endl;
+                std::cout << "I am crazy because max upper bound is bigger than 2**i " << child->maxdistUB << " " << n->covdist()/(base-1) << std::endl;
             if (dist_child < child->maxdistUB) {
                 res.push_back(child);
                 frontier.push(child);
