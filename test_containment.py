@@ -38,7 +38,6 @@ print("Test covering: ", ct.test_covering())
 
 print('Generate random points')
 y = np.random.rand(5,4).astype(np.float32)
-a = ct.Con
 print('Test Nearest Neighbour: ')
 t = gt()
 a = ct.nodes_containing(y)
