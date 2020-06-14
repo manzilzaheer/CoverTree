@@ -322,7 +322,7 @@ std::vector<CoverTree::Node *> CoverTree::ContainingNodes(CoverTree::Node* curre
 
     std::queue<CoverTree::Node *> frontier;
 
-    frontier.push(&current);
+    frontier.push(current);
 
     while (!frontier.empty()) {
         CoverTree::Node * n = frontier.front();
