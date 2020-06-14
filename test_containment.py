@@ -25,17 +25,17 @@ print('Building cover tree')
 # x = np.random.rand(10,4).astype(np.float32)
 
 x = np.array([
-    [100.0, 0.0],
-    [101.0, 0.0],
-    [101.0, 100.0],
-    [100.0, 101.0],
-    [-500.0, -500.0],
-    [-501.0, -500.0],
-    [-501.0, -501.0],
-    [-501.0, -502.0],
-    [0.0, -500.0],
-    [0.0, -501.0]
-])
+    [10.0, 0.0],
+    [11.0, 0.0],
+    [11.0, 10.0],
+    [10.0, 11.0],
+    [-50.0, -50.0],
+    [-51.0, -50.0],
+    [-51.0, -51.0],
+    [-51.0, -52.0],
+    [0.0, -50.0],
+    [0.0, -51.0]
+]).astype(np.float32)
 
 print(x)
 # print(x[0,0], x[0,1], x[1,0])
@@ -52,7 +52,7 @@ print("Building time:", b_t, "seconds")
 print("Test covering: ", ct.test_covering())
 
 print('Generate random points')
-y = np.random.rand(5,4).astype(np.float32)
+y = x 
 print('Test Nearest Neighbour: ')
 t = gt()
 a = ct.nodes_containing(y)
