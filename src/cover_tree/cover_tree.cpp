@@ -325,7 +325,8 @@ std::vector<CoverTree::Node *> CoverTree::ContainingNodes(CoverTree::Node* curre
     frontier.push(&current);
 
     while (!frontier.empty()) {
-        CoverTree::Node * n = frontier.pop();
+        CoverTree::Node * n = frontier.front();
+        frontier.pop();
         unsigned num_children = n->children.size();
         std::vector<int> idx(num_children);
         std::iota(std::begin(idx), std::end(idx), 0);
