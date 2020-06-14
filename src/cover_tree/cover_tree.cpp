@@ -324,37 +324,21 @@ std::vector<CoverTree::Node *> CoverTree::ContainingNodes(CoverTree::Node* curre
 
     frontier.push(current);
 
-    // Add assert for this case:
-    res.push_back(current);
-
-
     while (!frontier.empty()) {
-        std::cout << "Frontier size " << frontier.size() << std::endl;
-        CoverTree::Node * n = frontier.front();
+//        std::cout << "Frontier size " << frontier.size() << std::endl;
+        CoverTree::Node *n = frontier.front();
         frontier.pop();
-        unsigned num_children = n->children.size();
-        std::vector<int> idx(num_children);
-        std::iota(std::begin(idx), std::end(idx), 0);
-        std::vector<scalar> dists(num_children);
-        //dist_count[current->level].fetch_add(num_children, std::memory_order_relaxed);
-        for (unsigned i = 0; i < num_children; ++i)
-            dists[i] = n->children[i]->dist(p);
-//        auto comp_x = [&dists](int a, int b) { return dists[a] < dists[b]; };
-//        std::sort(std::begin(idx), std::end(idx), comp_x);
-
-        for (const auto& child_idx : idx)
-        {
-            Node* child = n->children[child_idx];
-            scalar dist_child = dists[child_idx];
-            if (child->maxdistUB > n->covdist()/(base-1))
-                std::cout << "I am crazy because max upper bound is bigger than 2**i " << child->maxdistUB << " " << n->covdist()/(base-1) << std::endl;
-            if (dist_child < child->maxdistUB) {
-                res.push_back(child);
+        scalar dist_to_n = n->dist(p);
+        if (dist_to_n < n->covdist()) {
+            res.push_back(n);
+            unsigned num_children = n->children.size();
+            std::vector<int> idx(num_children);
+            std::iota(std::begin(idx), std::end(idx), 0);
+            for (const auto &child_idx : idx) {
+                Node *child = n->children[child_idx];
                 frontier.push(child);
-                std::cout << "child " << child->ID << std::endl;
             }
         }
-
     }
     return res;
 }

@@ -52,7 +52,7 @@ print("Building time:", b_t, "seconds")
 print("Test covering: ", ct.test_covering())
 
 print('Generate random points')
-y = x 
+y = x
 print('Test Nearest Neighbour: ')
 t = gt()
 a = ct.nodes_containing(y)
