@@ -22,8 +22,23 @@ gt = time.time
 np.random.seed(seed=3)
 
 print('Building cover tree')
-x = np.random.rand(10,4).astype(np.float32)
-print(x[0,0], x[0,1], x[1,0])
+# x = np.random.rand(10,4).astype(np.float32)
+
+x = np.array([
+    [100.0, 0.0],
+    [101.0, 0.0],
+    [101.0, 100.0],
+    [100.0, 101.0],
+    [-500.0, -500.0],
+    [-501.0, -500.0],
+    [-501.0, -501.0],
+    [-501.0, -502.0],
+    [0.0, -500.0],
+    [0.0, -501.0]
+])
+
+print(x)
+# print(x[0,0], x[0,1], x[1,0])
 
 mx = np.mean(x,0)
 dists = np.array([np.sqrt(np.dot(xv-mx,xv-mx)) for xv in x])

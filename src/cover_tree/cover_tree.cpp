@@ -324,6 +324,10 @@ std::vector<CoverTree::Node *> CoverTree::ContainingNodes(CoverTree::Node* curre
 
     frontier.push(current);
 
+    // Add assert for this case:
+    res.push_back(current);
+
+
     while (!frontier.empty()) {
         std::cout << "Frontier size " << frontier.size() << std::endl;
         CoverTree::Node * n = frontier.front();
