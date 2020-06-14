@@ -347,6 +347,7 @@ std::vector<CoverTree::Node *> CoverTree::ContainingNodes(CoverTree::Node* curre
             if (dist_child < child->maxdistUB) {
                 res.push_back(child);
                 frontier.push(child);
+                std::cout << "child " << child->ID << std::endl;
             }
         }
 
