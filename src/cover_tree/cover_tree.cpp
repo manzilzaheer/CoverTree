@@ -355,7 +355,7 @@ std::vector<CoverTree::Node *> CoverTree::ContainingParents(CoverTree::Node* cur
     std::queue<CoverTree::Node *> frontier;
 
     frontier.push(current);
-    CoverTree::Node * n = CoverTree::NearestNeighbour(p);
+    CoverTree::Node * n = CoverTree::NearestNeighbour(p).first;
 
     while (n != NULL) {
         res.push_back(n);
