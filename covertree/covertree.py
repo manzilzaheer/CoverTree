@@ -16,8 +16,11 @@ class CoverTree(object):
     def insert(self, point):
         return covertreec.insert(self.this, point)
 
-    def nodes_containing(self, point):
-        return covertreec.nodes_containing(self.this, point)
+    def containing_nodes(self, point):
+        return covertreec.containing_nodes(self.this, point)
+
+    def containing_parents(self, point):
+        return covertreec.containing_parents(self.this, point)
 
     def remove(self, point):
         return covertreec.remove(self.this, point)

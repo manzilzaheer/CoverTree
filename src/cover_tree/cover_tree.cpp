@@ -344,6 +344,26 @@ std::vector<CoverTree::Node *> CoverTree::ContainingNodes(CoverTree::Node* curre
     return res;
 }
 
+std::vector<CoverTree::Node *> CoverTree::ContainingParents(const pointType &p) const {
+    return CoverTree::ContainingParents(root, p);
+}
+
+std::vector<CoverTree::Node *> CoverTree::ContainingParents(CoverTree::Node* current, const pointType &p) const
+{
+    std::vector<CoverTree::Node *> res;
+
+    std::queue<CoverTree::Node *> frontier;
+
+    frontier.push(current);
+    CoverTree::Node * n = CoverTree::NearestNeighbour(p);
+
+    while (n != null) {
+        res.push_back(n);
+        n = n->parent;
+    }
+    return res;
+}
+
 
 /****************************** Nearest Neighbour *************************************/
 void CoverTree::NearestNeighbour(CoverTree::Node* current, scalar dist_current, const pointType &p, std::pair<CoverTree::Node*, scalar>& nn) const

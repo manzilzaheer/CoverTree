@@ -188,6 +188,7 @@ protected:
 
     /*** Containing Nodes ***/
     std::vector<Node *> ContainingNodes(CoverTree::Node* current, const pointType &p) const;
+    std::vector<Node *> ContainingParents(CoverTree::Node* current, const pointType &p) const;
 
     /*** Nearest Neighbour search ***/
     void NearestNeighbour(Node* current, scalar dist_current, const pointType &p, std::pair<CoverTree::Node*, scalar>& nn) const;
@@ -246,6 +247,7 @@ public:
 
     /*** Containing Nodes ***/
     std::vector<Node *> ContainingNodes(const pointType &p) const;
+    std::vector<Node *> ContainingParents(const pointType &p) const;
 
     /*** Nearest Neighbour search ***/
     std::pair<CoverTree::Node*, scalar> NearestNeighbour(const pointType &p) const;
