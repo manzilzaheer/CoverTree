@@ -330,7 +330,8 @@ std::vector<CoverTree::Node *> CoverTree::ContainingNodes(CoverTree::Node* curre
         frontier.pop();
         scalar dist_to_n = n->dist(p);
         if (dist_to_n < n->covdist()) {
-            res.push_back(n);
+            if (n != current)
+                res.push_back(n);
             unsigned num_children = n->children.size();
             std::vector<int> idx(num_children);
             std::iota(std::begin(idx), std::end(idx), 0);
