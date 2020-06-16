@@ -352,11 +352,8 @@ std::vector<CoverTree::Node *> CoverTree::ContainingParents(CoverTree::Node* cur
 {
     std::vector<CoverTree::Node *> res;
 
-    std::queue<CoverTree::Node *> frontier;
-
-    frontier.push(current);
     CoverTree::Node * n = CoverTree::NearestNeighbour(p).first;
-
+    std::cout << "Found nn" << std::endl;
     while (n != NULL) {
         res.push_back(n);
         n = n->parent;
